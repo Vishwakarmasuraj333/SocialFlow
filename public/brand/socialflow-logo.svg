@@ -1,0 +1,50 @@
+<svg width="220" height="48" viewBox="0 0 220 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="sf-s-bg" cx="50%" cy="20%" r="90%">
+      <stop offset="0%" stop-color="#1E1B4B" />
+      <stop offset="60%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#020617" />
+    </radialGradient>
+    <linearGradient id="sf-s-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="35%" stop-color="#6366F1" />
+      <stop offset="70%" stop-color="#A855F7" />
+      <stop offset="100%" stop-color="#EC4899" />
+    </linearGradient>
+    <linearGradient id="sf-s-border" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818CF8" />
+      <stop offset="100%" stop-color="#F472B6" />
+    </linearGradient>
+    <linearGradient id="sf-text-flow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1" />
+      <stop offset="50%" stop-color="#A855F7" />
+      <stop offset="100%" stop-color="#EC4899" />
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(6, 6)">
+    <rect x="0" y="0" width="36" height="36" rx="10" fill="url(#sf-s-bg)" stroke="url(#sf-s-border)" stroke-width="1.2"/>
+    <path
+      d="M1 10C1 5 5 1 10 1H26C31 1 35 5 35 10V13C35 13 20 8 1 13V10Z"
+      fill="#FFFFFF"
+      fill-opacity="0.15"
+    />
+    <path
+      d="M25 11.5C25 9.5 22.5 8 18 8C13.5 8 10.5 10.5 10.5 14C10.5 18.5 25.5 16.5 25.5 22C25.5 25.5 22.5 28 18 28C14 28 11.5 26 11.5 23.5"
+      stroke="url(#sf-s-grad)"
+      stroke-width="3.2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <circle cx="25" cy="11.5" r="2" fill="#38BDF8" />
+    <circle cx="25" cy="11.5" r="0.9" fill="#FFFFFF" />
+    <circle cx="18" cy="18" r="1.6" fill="#A855F7" />
+    <circle cx="11.5" cy="23.5" r="2" fill="#EC4899" />
+    <circle cx="11.5" cy="23.5" r="0.9" fill="#FFFFFF" />
+  </g>
+
+  <!-- Wordmark -->
+  <text x="54" y="32" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="24" font-weight="900" letter-spacing="-0.03em" fill="#FFFFFF">
+    Social<tspan fill="url(#sf-text-flow)">Flow</tspan>
+  </text>
+</svg>

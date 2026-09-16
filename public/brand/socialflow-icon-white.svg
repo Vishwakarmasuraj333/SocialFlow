@@ -1,0 +1,52 @@
+<svg width="128" height="128" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sf-stream-1" x1="24" y1="6" x2="6" y2="15" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="50%" stop-color="#6366F1" />
+      <stop offset="100%" stop-color="#8B5CF6" />
+    </linearGradient>
+    <linearGradient id="sf-stream-2" x1="6" y1="12" x2="26" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6366F1" />
+      <stop offset="50%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#D946EF" />
+    </linearGradient>
+    <linearGradient id="sf-stream-3" x1="26" y1="17" x2="8" y2="26" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#D946EF" />
+      <stop offset="50%" stop-color="#EC4899" />
+      <stop offset="100%" stop-color="#F43F5E" />
+    </linearGradient>
+  </defs>
+
+  <!-- Flow Stream 1: Ingress Wave (Top-Right Node to Mid-Left Node) -->
+  <path
+    d="M 23.5 7.5 C 19 5.2 12.5 5.2 8.5 7.8 C 5.5 9.8 4.8 13 7.5 15.5"
+    stroke="#FFFFFF"
+    stroke-width="2.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Flow Stream 2: Central Network Nexus (Mid-Left Node across to Mid-Right Node) -->
+  <path
+    d="M 7.5 15.5 C 10.2 18.2 15 18.5 19.5 16.5 C 22.8 15 25.5 13.8 25.5 11.5"
+    stroke="#FFFFFF"
+    stroke-width="2.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Flow Stream 3: Egress Broadcast (Mid-Right Node down to Bottom-Left Node) -->
+  <path
+    d="M 24.5 16.5 C 27.2 19 26.5 22.2 23.5 24.2 C 19.5 26.8 13 26.8 8.5 24.5"
+    stroke="#FFFFFF"
+    stroke-width="2.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- 4 Connected Social Platform Synchronizer Nodes -->
+  <circle cx="23.5" cy="7.5" r="2.2" fill="#FFFFFF" />
+  <circle cx="7.5" cy="15.5" r="2.2" fill="#FFFFFF" />
+  <circle cx="24.5" cy="16.5" r="2.2" fill="#FFFFFF" />
+  <circle cx="8.5" cy="24.5" r="2.2" fill="#FFFFFF" />
+</svg>
