@@ -18,6 +18,7 @@ import {
   Sparkles,
   Edit,
   Lock,
+  User,
   Search,
   Globe,
   CheckSquare,
@@ -57,8 +58,8 @@ const CORE_ENTERPRISE_NETWORKS = [
     mediaLimit: 10,
     brandColor: '#E4405F',
     tagline: 'Reels, Stories & Feed',
-    idLabel: 'Instagram Username, Handle or Email',
-    idPlaceholder: 'e.g. @your_instagram or account@domain.com',
+    idLabel: 'Instagram Handle or Email',
+    idPlaceholder: 'e.g. @itxsurajofficial or name@gmail.com',
   },
   {
     id: 'facebook',
@@ -70,7 +71,7 @@ const CORE_ENTERPRISE_NETWORKS = [
     mediaLimit: 10,
     brandColor: '#1877F2',
     tagline: 'Pages, Groups & Streams',
-    idLabel: 'Facebook Email or Page Admin ID',
+    idLabel: 'Facebook Email or Page ID',
     idPlaceholder: 'e.g. page_admin@company.com or Page ID',
   },
   {
@@ -83,8 +84,8 @@ const CORE_ENTERPRISE_NETWORKS = [
     mediaLimit: 9,
     brandColor: '#0A66C2',
     tagline: 'Company Pages & Profiles',
-    idLabel: 'LinkedIn Account Email or Member Handle',
-    idPlaceholder: 'e.g. member@company.com or @company-name',
+    idLabel: 'LinkedIn Account Email or Handle',
+    idPlaceholder: 'e.g. member@company.com or @company',
   },
   {
     id: 'x',
@@ -96,8 +97,8 @@ const CORE_ENTERPRISE_NETWORKS = [
     mediaLimit: 4,
     brandColor: '#000000',
     tagline: 'Posts, Threads & Media',
-    idLabel: 'X Handle (@username) or Account Email',
-    idPlaceholder: 'e.g. @brand_official or account@domain.com',
+    idLabel: 'X Handle or Account Email',
+    idPlaceholder: 'e.g. @SocialFlowHQ or email@x.com',
   },
   {
     id: 'youtube',
@@ -109,8 +110,8 @@ const CORE_ENTERPRISE_NETWORKS = [
     mediaLimit: 1,
     brandColor: '#FF0000',
     tagline: 'Videos, Shorts & Community',
-    idLabel: 'YouTube Channel Handle or Google Account Email',
-    idPlaceholder: 'e.g. @ChannelName or account@gmail.com',
+    idLabel: 'YouTube Channel Handle or Email',
+    idPlaceholder: 'e.g. @ChannelHandle or user@gmail.com',
   },
   {
     id: 'tiktok',
@@ -122,8 +123,8 @@ const CORE_ENTERPRISE_NETWORKS = [
     mediaLimit: 35,
     brandColor: '#000000',
     tagline: 'Shorts, Stories & Sounds',
-    idLabel: 'TikTok Username or Mobile / Email',
-    idPlaceholder: 'e.g. @creator_official or user@domain.com',
+    idLabel: 'TikTok Username or Mobile/Email',
+    idPlaceholder: 'e.g. @creator_official or user@gmail.com',
   },
   {
     id: 'pinterest',
@@ -136,7 +137,7 @@ const CORE_ENTERPRISE_NETWORKS = [
     brandColor: '#E60023',
     tagline: 'Visual Boards & Pins',
     idLabel: 'Pinterest Username or Email',
-    idPlaceholder: 'e.g. @pinterest_brand or account@domain.com',
+    idPlaceholder: 'e.g. @pinterest_brand or user@domain.com',
   },
   {
     id: 'threads',
@@ -149,7 +150,85 @@ const CORE_ENTERPRISE_NETWORKS = [
     brandColor: '#101010',
     tagline: 'Threads by Meta',
     idLabel: 'Threads Handle (@username)',
-    idPlaceholder: 'e.g. @threads_handle',
+    idPlaceholder: 'e.g. @itxsurajofficial',
+  },
+  {
+    id: 'reddit',
+    slug: 'reddit',
+    name: 'Reddit',
+    networkType: 'Reddit OAuth API',
+    apiVersion: 'OAuth v2',
+    characterLimit: 40000,
+    mediaLimit: 20,
+    brandColor: '#FF4500',
+    tagline: 'Subreddits & Communities',
+    idLabel: 'Reddit Username or Account Email',
+    idPlaceholder: 'e.g. u/community_lead or user@reddit.com',
+  },
+  {
+    id: 'discord',
+    slug: 'discord',
+    name: 'Discord',
+    networkType: 'Discord Webhook & Bot API',
+    apiVersion: 'Bot v10',
+    characterLimit: 2000,
+    mediaLimit: 10,
+    brandColor: '#5865F2',
+    tagline: 'Servers & Announcements',
+    idLabel: 'Discord Account Email or Bot Token',
+    idPlaceholder: 'e.g. user@discord.com or Bot Token',
+  },
+  {
+    id: 'telegram',
+    slug: 'telegram',
+    name: 'Telegram',
+    networkType: 'Telegram Channel API',
+    apiVersion: 'Bot API v7',
+    characterLimit: 4096,
+    mediaLimit: 10,
+    brandColor: '#26A5E4',
+    tagline: 'Broadcast Channels & Supergroups',
+    idLabel: 'Telegram Channel (@handle) or Token',
+    idPlaceholder: 'e.g. @SocialFlowHQ or bot token',
+  },
+  {
+    id: 'whatsapp',
+    slug: 'whatsapp',
+    name: 'WhatsApp',
+    networkType: 'Meta WhatsApp Cloud API',
+    apiVersion: 'Cloud v19.0',
+    characterLimit: 1000,
+    mediaLimit: 10,
+    brandColor: '#25D366',
+    tagline: 'Official Business Channels',
+    idLabel: 'WhatsApp Business Number / Phone ID',
+    idPlaceholder: 'e.g. +1 (555) 019-2834 or Phone ID',
+  },
+  {
+    id: 'twitch',
+    slug: 'twitch',
+    name: 'Twitch',
+    networkType: 'Twitch Helix API',
+    apiVersion: 'Helix v5',
+    characterLimit: 500,
+    mediaLimit: 1,
+    brandColor: '#9146FF',
+    tagline: 'Live Streams & Communities',
+    idLabel: 'Twitch Channel Handle or Email',
+    idPlaceholder: 'e.g. streamer_official or user@twitch.tv',
+  },
+  {
+    id: 'snapchat',
+    slug: 'snapchat',
+    name: 'Snapchat',
+    networkType: 'Snap Kit Marketing API',
+    apiVersion: 'Snap Kit v2',
+    characterLimit: 250,
+    mediaLimit: 1,
+    brandColor: '#FFFC00',
+    tagline: 'Spotlight & Public Stories',
+    idLabel: 'Snapchat Public Handle or Email',
+    idPlaceholder: 'e.g. snap_creator or user@snap.com',
   },
 ];
 
@@ -499,9 +578,16 @@ export default function SocialAccountsView() {
       return;
     }
 
-    const cleanHandle = finalId
-      ? (finalId.startsWith('@') ? finalId : `@${finalId}`).trim()
-      : (accountHandle.trim() || `@${selectedPlatformSlug}_user`);
+    let cleanHandle = finalId.trim();
+    if (cleanHandle.includes('@') && cleanHandle.includes('.')) {
+      const usernamePart = cleanHandle.split('@').filter(Boolean)[0] || cleanHandle;
+      cleanHandle = `@${usernamePart}`;
+    } else if (!cleanHandle.startsWith('@')) {
+      cleanHandle = `@${cleanHandle}`;
+    }
+    if (!cleanHandle || cleanHandle === '@') {
+      cleanHandle = (accountHandle.trim() || `@${selectedPlatformSlug}_user`);
+    }
 
     const cleanName = (accountName.trim() || cleanHandle.replace(/^@/, '') || `${activePlatform.name} Official`).trim();
 
@@ -1207,10 +1293,12 @@ export default function SocialAccountsView() {
                 <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center">1</span>
                 <span>Select Social Network</span>
               </label>
-              <span className="text-[11px] text-slate-400 font-medium">8 Certified Integrations</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-bold bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-md">
+                14 Certified Integrations
+              </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="max-h-[290px] overflow-y-auto pr-1 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {CORE_ENTERPRISE_NETWORKS.map((plat) => {
                 const isSelected = selectedPlatformSlug === plat.slug;
                 
@@ -1219,11 +1307,17 @@ export default function SocialAccountsView() {
                   instagram: 'bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white',
                   facebook: 'bg-[#1877F2] text-white',
                   linkedin: 'bg-[#0A66C2] text-white',
-                  x: 'bg-slate-900 dark:bg-white text-white dark:text-slate-900',
+                  x: 'bg-black text-white dark:bg-white dark:text-black',
                   youtube: 'bg-[#FF0000] text-white',
-                  tiktok: 'bg-slate-950 text-white ring-1 ring-cyan-500/40',
+                  tiktok: 'bg-black text-white ring-1 ring-cyan-500/40',
                   pinterest: 'bg-[#E60023] text-white',
-                  threads: 'bg-slate-900 dark:bg-white text-white dark:text-slate-900',
+                  threads: 'bg-black text-white dark:bg-white dark:text-black',
+                  reddit: 'bg-[#FF4500] text-white',
+                  discord: 'bg-[#5865F2] text-white',
+                  telegram: 'bg-[#26A5E4] text-white',
+                  whatsapp: 'bg-[#25D366] text-white',
+                  twitch: 'bg-[#9146FF] text-white',
+                  snapchat: 'bg-[#FFFC00] text-slate-950',
                 };
 
                 return (
@@ -1235,14 +1329,14 @@ export default function SocialAccountsView() {
                       setLoginId('');
                       setLoginPassword('');
                     }}
-                    className={`p-3.5 rounded-2xl border-2 text-left flex flex-col justify-between gap-3 transition-all cursor-pointer relative overflow-hidden ${
+                    className={`p-3 rounded-2xl border-2 text-left flex flex-col justify-between gap-2.5 transition-all cursor-pointer relative overflow-hidden ${
                       isSelected
-                        ? 'border-indigo-600 dark:border-indigo-400 bg-indigo-50/90 dark:bg-indigo-950/60 shadow-md ring-4 ring-indigo-500/20 scale-[1.02]'
-                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-slate-50 dark:hover:bg-slate-850'
+                        ? 'border-indigo-600 dark:border-indigo-400 bg-indigo-50/90 dark:bg-indigo-950/70 shadow-md ring-4 ring-indigo-500/20 scale-[1.02]'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 hover:border-indigo-400 dark:hover:border-indigo-600 hover:bg-slate-50 dark:hover:bg-slate-850'
                     }`}
                   >
                     <div className="flex items-center justify-between w-full">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-xs ${iconBgMap[plat.slug] || 'bg-slate-800 text-white'}`}>
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shadow-xs ${iconBgMap[plat.slug] || 'bg-slate-800 text-white'}`}>
                         <SocialPlatformIcon platform={plat.slug} size="sm" />
                       </div>
                       {isSelected && (
@@ -1251,7 +1345,7 @@ export default function SocialAccountsView() {
                         </div>
                       )}
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <span className="block text-xs font-bold text-slate-900 dark:text-white truncate">
                         {plat.name}
                       </span>
@@ -1269,25 +1363,25 @@ export default function SocialAccountsView() {
           {(() => {
             const activeNet = CORE_ENTERPRISE_NETWORKS.find((p) => p.slug === selectedPlatformSlug) || CORE_ENTERPRISE_NETWORKS[0];
             return (
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-slate-50 via-indigo-50/30 to-slate-50 dark:from-slate-900/80 dark:via-indigo-950/20 dark:to-slate-900/80 border-2 border-slate-200 dark:border-slate-800">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-xs">
+              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-slate-50 via-indigo-50/30 to-slate-50 dark:from-slate-900/80 dark:via-indigo-950/20 dark:to-slate-900/80 border-2 border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-xs shrink-0">
                     <SocialPlatformIcon platform={activeNet.slug} size="md" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-black text-slate-900 dark:text-white">{activeNet.name} Integration</h4>
-                      <Badge className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 font-bold px-2">
+                      <h4 className="text-sm font-black text-slate-900 dark:text-white truncate">{activeNet.name} Integration</h4>
+                      <Badge className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 font-bold px-2 shrink-0">
                         Official API Ready
                       </Badge>
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      {activeNet.networkType} • Character limit: <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{activeNet.characterLimit.toLocaleString()}</span> chars
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                      {activeNet.networkType} • Max limit: <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{activeNet.characterLimit.toLocaleString()}</span> chars
                     </p>
                   </div>
                 </div>
 
-                <Badge variant="outline" className="text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800 hidden sm:inline-flex px-2.5 py-0.5">
+                <Badge variant="outline" className="text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800 hidden sm:inline-flex px-2.5 py-0.5 shrink-0">
                   {activeNet.apiVersion}
                 </Badge>
               </div>
@@ -1331,11 +1425,12 @@ export default function SocialAccountsView() {
             {authMethod === 'CREDENTIALS' && (() => {
               const activeNet = CORE_ENTERPRISE_NETWORKS.find((p) => p.slug === selectedPlatformSlug) || CORE_ENTERPRISE_NETWORKS[0];
               return (
-                <div className="space-y-3.5 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="space-y-4 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/70">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                        {activeNet.idLabel} *
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                        <User className="w-3.5 h-3.5 text-indigo-500" />
+                        <span>{activeNet.name} Username, Handle or Email *</span>
                       </label>
                       <input
                         type="text"
@@ -1345,14 +1440,18 @@ export default function SocialAccountsView() {
                           setLoginId(e.target.value);
                           if (!accountHandle) setAccountHandle(e.target.value);
                         }}
-                        placeholder={activeNet.idPlaceholder}
-                        className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                        placeholder="e.g. @itxsurajofficial or account@domain.com"
+                        className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
                       />
+                      <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
+                        Enter your official brand handle or account login email.
+                      </p>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                        Account Password *
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5 text-indigo-500" />
+                        <span>Account Password *</span>
                       </label>
                       <div className="relative">
                         <input
@@ -1361,16 +1460,19 @@ export default function SocialAccountsView() {
                           value={loginPassword}
                           onChange={(e) => setLoginPassword(e.target.value)}
                           placeholder="Enter account password"
-                          className="w-full pl-3.5 pr-10 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                          className="w-full pl-3.5 pr-10 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
                         />
                         <button
                           type="button"
                           onClick={() => setShowLoginPassword(!showLoginPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer p-1"
                         >
                           {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       </div>
+                      <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
+                        Encrypted with hardware-isolated AES-256-GCM.
+                      </p>
                     </div>
                   </div>
 
@@ -1407,7 +1509,7 @@ export default function SocialAccountsView() {
                       value={accountName}
                       onChange={(e) => setAccountName(e.target.value)}
                       placeholder="e.g. SocialFlow Global (defaults to handle if blank)"
-                      className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
                 </div>

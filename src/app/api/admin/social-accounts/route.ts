@@ -275,9 +275,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const cleanHandle = userIdentifier
-      ? (userIdentifier.startsWith('@') ? userIdentifier : `@${userIdentifier}`).trim()
-      : `@${platformType.toLowerCase()}_user`;
+    let cleanHandle = userIdentifier.trim();
+    if (cleanHandle.includes('@') && cleanHandle.includes('.')) {
+      const usernamePart = cleanHandle.split('@').filter(Boolean)[0] || cleanHandle;
+      cleanHandle = `@${usernamePart}`;
+    } else if (!cleanHandle.startsWith('@')) {
+      cleanHandle = `@${cleanHandle}`;
+    }
+    if (!cleanHandle || cleanHandle === '@') {
+      cleanHandle = `@${platformType.toLowerCase()}_user`;
+    }
 
     const cleanName = (accountName || cleanHandle.replace(/^@/, '') || `${platformType} Official`).trim();
     const platformAccountId = body.platformAccountId || `${platformType.toLowerCase()}_${cleanHandle.replace(/[^a-zA-Z0-9_]/g, '') || Date.now()}`;

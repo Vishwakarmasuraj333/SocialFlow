@@ -170,6 +170,27 @@ export function AdminLoginView({ defaultRedirect = '/admin/dashboard' }: { defau
             </div>
           )}
 
+          {/* Real Verified Admin Credentials Quick Helper */}
+          <div className="mb-4 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/25 text-xs text-indigo-300 flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-2 truncate">
+              <KeyRound className="w-4 h-4 text-indigo-400 shrink-0" />
+              <div className="min-w-0">
+                <p className="font-bold text-white text-[11px] truncate">itxsurajofficial@gmail.com</p>
+                <p className="text-[10px] text-slate-400 font-mono">Password: Password123!</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('itxsurajofficial@gmail.com');
+                setPassword('Password123!');
+              }}
+              className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] tracking-wide transition-all shadow-xs cursor-pointer shrink-0"
+            >
+              Fill Credentials
+            </button>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email Field */}
             <div>
@@ -185,7 +206,7 @@ export function AdminLoginView({ defaultRedirect = '/admin/dashboard' }: { defau
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@socialflow.io"
+                  placeholder="itxsurajofficial@gmail.com"
                   className="block w-full pl-10 pr-3.5 py-2.5 text-sm bg-slate-950/70 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                 />
               </div>
@@ -205,7 +226,7 @@ export function AdminLoginView({ defaultRedirect = '/admin/dashboard' }: { defau
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
+                  placeholder="Password123!"
                   className="block w-full pl-10 pr-11 py-2.5 text-sm bg-slate-950/70 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                 />
                 <button
@@ -303,7 +324,7 @@ export function AdminLoginView({ defaultRedirect = '/admin/dashboard' }: { defau
                     required
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
-                    placeholder="admin@socialflow.io"
+                    placeholder="itxsurajofficial@gmail.com"
                     className="block w-full px-3.5 py-2.5 text-sm bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                   />
                 </div>
