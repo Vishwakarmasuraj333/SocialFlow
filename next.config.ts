@@ -30,6 +30,8 @@ const nextConfig: NextConfig = {
     CLOUDINARY_URL:
       process.env.CLOUDINARY_URL ||
       "cloudinary://989274399297756:nKcYlw-kQH6IC1-ZGatGzAGaKSM@dme6gzoic",
+    PINTEREST_APP_ID: process.env.PINTEREST_APP_ID || "",
+    PINTEREST_APP_SECRET: process.env.PINTEREST_APP_SECRET || "",
   },
 };
 
