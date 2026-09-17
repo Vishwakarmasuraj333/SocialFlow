@@ -395,20 +395,22 @@ export default function CampaignsView() {
                   {c.scheduledCount > 0 ? `${c.scheduledCount} in queue` : 'Active'}
                 </span>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => openEditModal(c)}
                     title="Edit Campaign"
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 transition cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 text-[11px] font-semibold flex items-center gap-1 transition cursor-pointer"
                   >
-                    <Edit2 className="w-3.5 h-3.5" />
+                    <Edit2 className="w-3 h-3" />
+                    <span>Edit</span>
                   </button>
                   <button
                     onClick={() => setCampaignToDelete(c)}
                     title="Delete Campaign"
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg text-red-600 dark:text-red-400 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50 border border-red-200 dark:border-red-900/40 text-[11px] font-semibold flex items-center gap-1 transition cursor-pointer"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-3 h-3" />
+                    <span>Delete</span>
                   </button>
                 </div>
               </div>
@@ -518,24 +520,41 @@ export default function CampaignsView() {
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setIsModalOpen(false)}
-              className="rounded-xl"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              size="sm"
-              isLoading={isSubmitting}
-              className="rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold"
-            >
-              {editingCampaign ? 'Update Campaign' : 'Create Campaign'}
-            </Button>
+          <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+            {editingCampaign ? (
+              <button
+                type="button"
+                onClick={() => {
+                  const target = editingCampaign;
+                  setIsModalOpen(false);
+                  setCampaignToDelete(target);
+                }}
+                className="px-3 py-1.5 text-xs font-semibold rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 border border-red-200 dark:border-red-900/50 flex items-center gap-1.5 cursor-pointer transition"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Campaign</span>
+              </button>
+            ) : <div />}
+
+            <div className="flex items-center gap-2.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsModalOpen(false)}
+                className="rounded-xl"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                isLoading={isSubmitting}
+                className="rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold"
+              >
+                {editingCampaign ? 'Update Campaign' : 'Create Campaign'}
+              </Button>
+            </div>
           </div>
         </form>
       </Modal>

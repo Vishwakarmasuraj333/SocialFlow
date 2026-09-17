@@ -34,6 +34,17 @@ import { Modal } from '@/components/ui/modal';
 import { useToast } from '@/components/ui/toast';
 import { SocialPlatformIcon } from '@/components/brand/platform-icons';
 
+function cleanHandle(handle?: string | null): string {
+  if (!handle) return '';
+  let clean = handle.trim();
+  if (clean.includes('@') && clean.includes('.')) {
+    const parts = clean.split('@').filter(Boolean);
+    clean = parts[0] || clean;
+  }
+  clean = clean.replace(/^@+/, '');
+  return `@${clean}`;
+}
+
 export default function PostsView() {
   const { showToast } = useToast();
   const [posts, setPosts] = useState<any[]>([]);
@@ -409,7 +420,7 @@ export default function PostsView() {
                               >
                                 <SocialPlatformIcon platform={t.platform.toLowerCase()} size="xs" />
                                 <span>{t.platform}</span>
-                                {handle && <span className="opacity-70 font-mono text-[9px]">({handle})</span>}
+                                {handle && <span className="opacity-70 font-mono text-[9px]">({cleanHandle(handle)})</span>}
                               </span>
                             );
                           })}

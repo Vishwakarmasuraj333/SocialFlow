@@ -282,7 +282,7 @@ export async function getWorkspaceAnalytics(
     kpis: {
       totalFollowers: {
         title: 'Total Followers',
-        value: curFollowers > 0 ? curFollowers.toLocaleString() : '0',
+        value: curFollowers > 0 ? curFollowers.toLocaleString('en-US') : '0',
         changePercent: followersChange.change,
         trend: followersChange.trend,
         comparisonPeriod: followersChange.hasData ? `vs prev ${days} days` : 'No previous baseline',
@@ -298,7 +298,7 @@ export async function getWorkspaceAnalytics(
       },
       totalReach: {
         title: 'Total Reach',
-        value: curReach > 0 ? curReach.toLocaleString() : '0',
+        value: curReach > 0 ? curReach.toLocaleString('en-US') : '0',
         changePercent: reachChange.change,
         trend: reachChange.trend,
         comparisonPeriod: reachChange.hasData ? `vs prev ${days} days` : 'No reach records',
@@ -306,7 +306,7 @@ export async function getWorkspaceAnalytics(
       },
       totalImpressions: {
         title: 'Total Impressions',
-        value: curImpressions > 0 ? curImpressions.toLocaleString() : '0',
+        value: curImpressions > 0 ? curImpressions.toLocaleString('en-US') : '0',
         changePercent: impressionsChange.change,
         trend: impressionsChange.trend,
         comparisonPeriod: impressionsChange.hasData ? `vs prev ${days} days` : 'No impression records',

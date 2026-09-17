@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/toast';
+import { SocialPlatformIcon } from '@/components/brand/platform-icons';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -93,13 +94,15 @@ export default function AnalyticsView() {
             onChange={(e) => setPlatform(e.target.value)}
             className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none shadow-sm dark:shadow-none cursor-pointer"
           >
-            <option value="ALL">All Platforms</option>
+            <option value="ALL">All Platforms (8 Channels)</option>
+            <option value="INSTAGRAM">Instagram</option>
+            <option value="FACEBOOK">Facebook</option>
             <option value="LINKEDIN">LinkedIn</option>
             <option value="TWITTER">X (Twitter)</option>
-            <option value="INSTAGRAM">Instagram</option>
-            <option value="TIKTOK">TikTok</option>
-            <option value="FACEBOOK">Facebook</option>
             <option value="YOUTUBE">YouTube</option>
+            <option value="TIKTOK">TikTok</option>
+            <option value="PINTEREST">Pinterest</option>
+            <option value="THREADS">Threads</option>
           </select>
 
           <Button variant="outline" size="sm" onClick={handleExportCSV} className="flex items-center gap-1.5 rounded-xl text-xs">
@@ -250,6 +253,7 @@ export default function AnalyticsView() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
+                      <SocialPlatformIcon platform={pb.platform.toLowerCase()} size="xs" />
                       <span className="font-bold text-xs text-slate-900 dark:text-white">{pb.platform}</span>
                       {pb.accountsCount > 0 && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-200/60 dark:bg-slate-800 text-slate-500 font-mono">
@@ -263,7 +267,7 @@ export default function AnalyticsView() {
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-slate-500 dark:text-slate-400">Total Audience:</span>
                       <span className="font-bold text-slate-900 dark:text-white">
-                        {pb.followers > 0 ? pb.followers.toLocaleString() : 'No data available'}
+                        {pb.followers > 0 ? pb.followers.toLocaleString('en-US') : 'No data available'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs">

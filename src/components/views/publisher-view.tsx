@@ -60,6 +60,17 @@ const PLATFORMS_CONFIG: Record<string, { name: string; limit: number; color: str
   PINTEREST: { name: 'Pinterest', limit: 500, color: '#E60023', maxImages: 5, supportsVideo: true, requiresMedia: true },
 };
 
+function cleanHandle(handle?: string | null): string {
+  if (!handle) return '';
+  let clean = handle.trim();
+  if (clean.includes('@') && clean.includes('.')) {
+    const parts = clean.split('@').filter(Boolean);
+    clean = parts[0] || clean;
+  }
+  clean = clean.replace(/^@+/, '');
+  return `@${clean}`;
+}
+
 export default function PublisherView() {
   const router = useRouter();
   const { showToast } = useToast();
@@ -202,7 +213,8 @@ export default function PublisherView() {
 
     if (selectedAccountIds.includes(accId)) {
       if (selectedAccountIds.length === 1) {
-        showToast('At least one social account must be selected', 'warning');
+        // Just switch the active preview to this account smoothly without an annoying warning toast
+        setActivePreviewPlatform(acc.platform.toUpperCase());
         return;
       }
       const updated = selectedAccountIds.filter((id) => id !== accId);
@@ -448,7 +460,7 @@ export default function PublisherView() {
                     <SocialPlatformIcon platform={acc.platform.toLowerCase()} size="sm" />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-bold truncate">{acc.accountName}</p>
-                      <p className="text-[10px] font-mono text-slate-500 truncate">{acc.accountHandle}</p>
+                      <p className="text-[10px] font-mono text-slate-500 truncate">{cleanHandle(acc.accountHandle)}</p>
                     </div>
                     {isSelected && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />}
                   </button>
@@ -472,27 +484,7 @@ export default function PublisherView() {
               />
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  Global Caption & Text
-                </label>
-                <span className={`text-[11px] font-mono font-bold ${isOverLimit ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500'}`}>
-                  {previewContent.length} / {charLimit} chars ({activePlatformConfig.name})
-                </span>
-              </div>
-
-              <textarea
-                rows={5}
-                required
-                value={globalContent}
-                onChange={(e) => setGlobalContent(e.target.value)}
-                placeholder="Write your update here... Include key highlights, links, and hashtags."
-                className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-sans leading-relaxed"
-              />
-            </div>
-
-            {/* Media Attachment & Real Desktop Upload */}
+            {/* Media Attachment & Real Desktop Upload (Positioned Prominently at Top) */}
             <div className="space-y-3 pt-1">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
@@ -658,6 +650,27 @@ export default function PublisherView() {
               )}
             </div>
 
+            {/* Global Caption & Text */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  Global Caption & Text
+                </label>
+                <span className={`text-[11px] font-mono font-bold ${isOverLimit ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500'}`}>
+                  {previewContent.length} / {charLimit} chars ({activePlatformConfig.name})
+                </span>
+              </div>
+
+              <textarea
+                rows={5}
+                required
+                value={globalContent}
+                onChange={(e) => setGlobalContent(e.target.value)}
+                placeholder="Write your update here... Include key highlights, links, and hashtags."
+                className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-sans leading-relaxed"
+              />
+            </div>
+
             {/* Real Scheduling Toggle & Date/Time Picker */}
             <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 space-y-3">
               <div className="flex items-center justify-between">
@@ -746,14 +759,14 @@ export default function PublisherView() {
                     {currentAccount?.accountName || 'SocialFlow Channel'}
                   </p>
                   <p className="text-[11px] text-slate-500 font-mono truncate">
-                    {currentAccount?.accountHandle || '@channel'}
+                    {cleanHandle(currentAccount?.accountHandle) || '@channel'}
                   </p>
                 </div>
               </div>
 
               {/* Caption Content */}
               <p className="text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
-                {previewContent || 'Your post caption will be previewed here in real-time...'}
+                {previewContent || (mediaUrls.length > 0 ? '' : 'Enter your post caption or attach media to preview live feed rendering')}
               </p>
 
               {/* Media Preview (Video or Image) */}
