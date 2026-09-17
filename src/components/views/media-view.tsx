@@ -322,14 +322,14 @@ export default function MediaView() {
             </Badge>
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Cloudinary CDN Active ({stats?.cloudinary.cloudName || 'dme6gzoic'})
+              Enterprise Cloud CDN Active
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
             Media Asset Library
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Production Cloudinary-backed digital asset depot for high-res images, videos, and multi-network campaigns.
+            Centralized digital asset vault for high-resolution images, videos, and multi-channel publications.
           </p>
         </div>
 

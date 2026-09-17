@@ -117,9 +117,7 @@ export async function POST(req: NextRequest) {
     }
 
     let initialStatus = 'DRAFT';
-    if (publishNow) {
-      initialStatus = 'PUBLISHING';
-    } else if (scheduledAt) {
+    if (scheduledAt) {
       initialStatus = 'SCHEDULED';
     }
 
