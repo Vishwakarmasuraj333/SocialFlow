@@ -53,12 +53,20 @@ function DnsContent() {
       const res = await fetch('/api/admin/domains');
       if (res.ok) {
         const json = await res.json();
-        setDomains(json.domains || []);
-        if (!selectedDomainId && json.domains?.length > 0) {
-          setSelectedDomainId(json.domains[0].id);
+        const domainList = json.domains || [];
+        setDomains(domainList);
+        if (domainList.length > 0) {
+          const currentValid = domainList.some((d: any) => d.id === selectedDomainId);
+          const targetId = currentValid ? selectedDomainId : (initialDomainId || domainList[0].id);
+          setSelectedDomainId(targetId);
+          fetchRecords(targetId);
+        } else {
+          setIsLoading(false);
         }
       }
-    } catch {}
+    } catch {
+      setIsLoading(false);
+    }
   };
 
   const fetchRecords = async (domainId?: string) => {

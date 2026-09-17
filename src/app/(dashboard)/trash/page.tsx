@@ -466,7 +466,7 @@ export default function TrashPage() {
                       className="h-8 text-xs font-semibold rounded-xl"
                     >
                       <Trash2 className="h-3.5 w-3.5 mr-1" />
-                      <span>Real Delete</span>
+                      <span>Delete</span>
                     </Button>
                   </div>
                 </div>
@@ -480,7 +480,7 @@ export default function TrashPage() {
       <Modal
         isOpen={Boolean(permanentDeletePost)}
         onClose={() => !isProcessing && setPermanentDeletePost(null)}
-        title="Permanently Purge Post From Database?"
+        title="Permanently Delete Post?"
         description="This action cannot be undone. All target delivery data and history will be permanently deleted."
         maxWidth="md"
       >
@@ -488,7 +488,7 @@ export default function TrashPage() {
           <div className="p-3.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/20 text-xs text-rose-700 dark:text-rose-400 flex items-start gap-2.5">
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <span className="font-bold">Irreversible Database Deletion</span>
+              <span className="font-bold">Irreversible Deletion</span>
               <p className="text-[11px] leading-relaxed">
                 You are about to permanently delete: <b>&quot;{permanentDeletePost?.title || permanentDeletePost?.globalContent?.slice(0, 45)}...&quot;</b>
               </p>
@@ -509,9 +509,9 @@ export default function TrashPage() {
               size="sm"
               isLoading={isProcessing}
               onClick={handlePermanentDelete}
-              className="rounded-xl font-bold"
+              className="rounded-xl font-medium"
             >
-              Real Delete (Permanent)
+              Delete Permanently
             </Button>
           </div>
         </div>
@@ -521,7 +521,7 @@ export default function TrashPage() {
       <Modal
         isOpen={bulkDeleteModalOpen}
         onClose={() => !isProcessing && setBulkDeleteModalOpen(false)}
-        title={`Permanently Purge ${selectedPostIds.length} Selected Posts?`}
+        title={`Permanently Delete ${selectedPostIds.length} Posts?`}
         description="This action cannot be undone. Selected items will be permanently erased from the database."
         maxWidth="md"
       >
@@ -529,9 +529,9 @@ export default function TrashPage() {
           <div className="p-3.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/20 text-xs text-rose-700 dark:text-rose-400 flex items-start gap-2.5">
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold">Purge {selectedPostIds.length} Posts Forever</span>
+              <span className="font-bold">Delete {selectedPostIds.length} Posts Forever</span>
               <p className="text-[11px] leading-relaxed mt-1">
-                These {selectedPostIds.length} items will be permanently removed from SQLite database and cannot be recovered.
+                These {selectedPostIds.length} items will be permanently removed from database and cannot be recovered.
               </p>
             </div>
           </div>
@@ -550,9 +550,9 @@ export default function TrashPage() {
               size="sm"
               isLoading={isProcessing}
               onClick={handleBulkPermanentDelete}
-              className="rounded-xl font-bold"
+              className="rounded-xl font-medium"
             >
-              Confirm Real Delete ({selectedPostIds.length})
+              Delete Permanently ({selectedPostIds.length})
             </Button>
           </div>
         </div>

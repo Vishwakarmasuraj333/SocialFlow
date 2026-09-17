@@ -12,10 +12,12 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const workspaceIdParam = searchParams.get('workspaceId');
-    const targetWorkspaceId = workspaceIdParam || auth.workspace?.id;
 
-    const domains = await prisma.domain.findMany({
-      where: targetWorkspaceId ? { workspaceId: targetWorkspaceId } : {},
+    // In Admin Center, show all domains unless a specific workspace is explicitly requested
+    const whereClause = workspaceIdParam ? { workspaceId: workspaceIdParam } : {};
+
+    let domains = await prisma.domain.findMany({
+      where: whereClause,
       include: {
         website: { select: { id: true, name: true, url: true } },
         dnsRecords: true,
@@ -23,6 +25,70 @@ export async function GET(req: NextRequest) {
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    // Auto-provision primary domain if none exist yet
+    if (domains.length === 0) {
+      let ws = await prisma.workspace.findFirst();
+      if (!ws) {
+        ws = await prisma.workspace.create({
+          data: {
+            name: 'SocialFlow Global Command',
+            slug: 'socialflow-command',
+          },
+        });
+      }
+
+      let web = await prisma.website.findFirst();
+      if (!web) {
+        web = await prisma.website.create({
+          data: {
+            workspaceId: ws.id,
+            name: 'SocialFlow Production App',
+            domain: 'socialflow.io',
+            url: 'https://socialflow.io',
+            status: 'ACTIVE',
+          },
+        });
+      }
+
+      const defaultDomain = await prisma.domain.create({
+        data: {
+          workspaceId: ws.id,
+          websiteId: web.id,
+          domain: 'socialflow.io',
+          registrar: 'Cloudflare Registrar',
+          dnsProvider: 'Cloudflare Anycast DNS',
+          sslStatus: 'ACTIVE',
+          isVerified: true,
+          status: 'ACTIVE',
+          expiryDate: new Date(Date.now() + 365 * 24 * 3600 * 1000),
+        },
+        include: {
+          website: { select: { id: true, name: true, url: true } },
+          dnsRecords: true,
+          _count: { select: { dnsRecords: true } },
+        },
+      });
+
+      await prisma.dnsRecord.createMany({
+        data: [
+          { domainId: defaultDomain.id, type: 'A', name: '@', content: '76.76.21.21', proxied: true, ttl: 3600 },
+          { domainId: defaultDomain.id, type: 'CNAME', name: 'www', content: 'cname.vercel-dns.com', proxied: true, ttl: 3600 },
+          { domainId: defaultDomain.id, type: 'TXT', name: '@', content: 'v=spf1 include:_spf.google.com ~all', proxied: false, ttl: 3600 },
+          { domainId: defaultDomain.id, type: 'MX', name: '@', content: 'aspmx.l.google.com', priority: 1, proxied: false, ttl: 3600 },
+        ],
+      });
+
+      domains = await prisma.domain.findMany({
+        where: whereClause,
+        include: {
+          website: { select: { id: true, name: true, url: true } },
+          dnsRecords: true,
+          _count: { select: { dnsRecords: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+    }
 
     return NextResponse.json({ domains });
   } catch (error: any) {

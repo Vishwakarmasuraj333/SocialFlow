@@ -1145,9 +1145,9 @@ export default function MediaView() {
                 className="mt-0.5"
               />
               <div>
-                <p className="text-xs font-bold text-rose-600 dark:text-rose-400">Permanently Purge (Cloudinary & DB)</p>
+                <p className="text-xs font-bold text-rose-600 dark:text-rose-400">Permanently Delete (Cloudinary & Database)</p>
                 <p className="text-[11px] text-rose-700/80 dark:text-rose-300/80">
-                  Completely destroys the asset from Cloudinary storage CDN and deletes SQLite records forever.
+                  Permanently removes this asset from Cloudinary storage CDN and database records.
                 </p>
               </div>
             </div>
@@ -1170,7 +1170,7 @@ export default function MediaView() {
               onClick={executeDelete}
               className={`rounded-xl ${deleteMode === 'soft' ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : ''}`}
             >
-              {deleteMode === 'soft' ? 'Move to Trash' : 'Purge Forever'}
+              {deleteMode === 'soft' ? 'Move to Trash' : 'Delete Permanently'}
             </Button>
           </div>
         </div>

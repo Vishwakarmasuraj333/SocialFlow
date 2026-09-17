@@ -525,9 +525,9 @@ export default function ServersManagementPage() {
               size="sm"
               isLoading={isProcessing}
               onClick={handleDeleteAsset}
-              className="rounded-xl font-bold"
+              className="rounded-xl font-medium"
             >
-              Confirm Real Delete
+              Delete Asset
             </Button>
           </div>
         </div>

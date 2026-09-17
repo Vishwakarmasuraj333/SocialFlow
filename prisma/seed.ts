@@ -389,13 +389,13 @@ async function main() {
       },
       {
         workspaceId: workspace.id,
-        name: 'Primary SQLite Core DB Engine',
+        name: 'Neon PostgreSQL Serverless Cloud DB',
         type: 'DATABASE',
-        provider: 'Local Storage Engine',
+        provider: 'Neon Cloud (AWS)',
         environment: 'PRODUCTION',
-        region: 'Local Cloud',
+        region: 'us-east-2',
         status: 'RUNNING',
-        resourcesJson: JSON.stringify({ engine: 'Prisma Client v6', size: '786 KB', queriesSec: 320 }),
+        resourcesJson: JSON.stringify({ engine: 'PostgreSQL 16', pooler: 'PgBouncer Active', queriesSec: 1850 }),
       },
       {
         workspaceId: workspace.id,

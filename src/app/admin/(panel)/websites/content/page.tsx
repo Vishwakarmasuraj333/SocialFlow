@@ -53,12 +53,20 @@ export default function WebsiteContentPage() {
       const res = await fetch('/api/admin/websites');
       if (res.ok) {
         const json = await res.json();
-        setWebsites(json.websites || []);
-        if (json.websites?.length > 0 && !selectedWebsiteId) {
-          setSelectedWebsiteId(json.websites[0].id);
+        const siteList = json.websites || [];
+        setWebsites(siteList);
+        if (siteList.length > 0) {
+          const currentValid = siteList.some((w: any) => w.id === selectedWebsiteId);
+          const targetId = currentValid ? selectedWebsiteId : siteList[0].id;
+          setSelectedWebsiteId(targetId);
+          fetchContents(targetId);
+        } else {
+          setIsLoading(false);
         }
       }
-    } catch {}
+    } catch {
+      setIsLoading(false);
+    }
   };
 
   const fetchContents = async (siteId?: string) => {
@@ -472,9 +480,9 @@ export default function WebsiteContentPage() {
               size="sm"
               isLoading={isProcessing}
               onClick={handleDelete}
-              className="rounded-xl font-bold"
+              className="rounded-xl font-medium"
             >
-              Confirm Real Delete
+              Delete Article
             </Button>
           </div>
         </div>
