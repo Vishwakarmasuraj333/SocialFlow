@@ -120,17 +120,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify password: check bcrypt hash, or check against env ADMIN_PASSWORD
-    let isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-
-    if (!isPasswordValid && envAdminPassword && password === envAdminPassword && (user.isSuperAdmin || cleanEmail === envAdminEmail)) {
-      const newHash = await bcrypt.hash(envAdminPassword, 10);
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { passwordHash: newHash },
-      });
-      isPasswordValid = true;
-    }
+    // Verify password strictly against database bcrypt hash
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
     if (!isPasswordValid) {
       const failedAttempts = (user.failedLoginAttempts || 0) + 1;

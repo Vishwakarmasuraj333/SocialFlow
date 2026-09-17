@@ -88,11 +88,17 @@ export async function executePostPublishing(postId: string): Promise<PublishExec
       const provider = providerFactory.getProvider(platform);
 
       // Decrypt OAuth access token securely on backend
-      const accessToken = decryptSecret(
+      let accessToken = decryptSecret(
         account.credentials.encryptedAccessToken,
         account.credentials.iv,
         account.credentials.authTag
       );
+      try {
+        if (accessToken && accessToken.startsWith('{')) {
+          const parsed = JSON.parse(accessToken);
+          accessToken = parsed.token || parsed.accessToken || accessToken;
+        }
+      } catch {}
 
       const postContent = target.customContent || post.globalContent;
 

