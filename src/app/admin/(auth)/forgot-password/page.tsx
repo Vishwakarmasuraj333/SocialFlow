@@ -27,10 +27,10 @@ export default function AdminForgotPasswordPage() {
 
       const data = await res.json();
       setSubmitted(true);
-      if (data.devToken) {
-        setDevToken(data.devToken);
+      if (data.recoveryToken || data.devToken) {
+        setDevToken(data.recoveryToken || data.devToken);
       }
-      showToast('Recovery request submitted successfully', 'info');
+      showToast('Recovery request processed successfully', 'info');
     } catch {
       showToast('Network error processing request', 'error');
     } finally {

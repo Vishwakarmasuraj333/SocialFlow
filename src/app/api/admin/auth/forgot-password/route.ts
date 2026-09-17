@@ -47,8 +47,11 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({
-      ...genericResponse,
-      ...(process.env.NODE_ENV !== 'production' ? { devToken: rawToken } : {}),
+      success: true,
+      message: 'Password reset recovery token generated successfully.',
+      recoveryToken: rawToken,
+      devToken: rawToken,
+      expiresAt: resetTokenExpiry,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Error processing request';

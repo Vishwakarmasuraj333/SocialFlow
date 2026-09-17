@@ -175,7 +175,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { ids } = body;
+    const { ids, permanent = false } = body;
 
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json({ error: 'Valid post IDs array is required' }, { status: 400 });
@@ -187,6 +187,27 @@ export async function DELETE(req: NextRequest) {
 
     if (auth.workspace && !auth.user.isSuperAdmin) {
       where.workspaceId = auth.workspace.id;
+    }
+
+    if (permanent) {
+      const deleted = await prisma.post.deleteMany({
+        where,
+      });
+
+      await logAuditEvent({
+        workspaceId: auth.workspace?.id || 'system',
+        userId: auth.user.id,
+        action: 'POSTS_BULK_PERMANENTLY_DELETED',
+        entityType: 'Post',
+        entityId: 'bulk',
+        metadata: { deletedCount: deleted.count, postIds: ids },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `Successfully permanently purged ${deleted.count} posts from the database.`,
+        count: deleted.count,
+      });
     }
 
     const updated = await prisma.post.updateMany({
@@ -208,7 +229,7 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Successfully deleted ${updated.count} posts to trash.`,
+      message: `Successfully moved ${updated.count} posts to trash.`,
       count: updated.count,
     });
   } catch (error: any) {

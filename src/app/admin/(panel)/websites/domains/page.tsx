@@ -14,6 +14,9 @@ import {
   ShieldCheck,
   Calendar,
   Layers,
+  CheckSquare,
+  Square,
+  Check,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,6 +29,10 @@ export default function DomainsManagementPage() {
   const [domains, setDomains] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
+
+  // Multi-Selection State
+  const [selectedDomainIds, setSelectedDomainIds] = useState<string[]>([]);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
 
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -58,6 +65,20 @@ export default function DomainsManagementPage() {
   useEffect(() => {
     fetchDomains();
   }, []);
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedDomainIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedDomainIds.length === filteredDomains.length && filteredDomains.length > 0) {
+      setSelectedDomainIds([]);
+    } else {
+      setSelectedDomainIds(filteredDomains.map((d) => d.id));
+    }
+  };
 
   const handleAddDomain = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,6 +121,7 @@ export default function DomainsManagementPage() {
       const json = await res.json();
       if (res.ok) {
         showToast(json.message || 'Domain removed', 'success');
+        setSelectedDomainIds((prev) => prev.filter((id) => id !== domainToDelete.id));
         setDomainToDelete(null);
         fetchDomains();
       } else {
@@ -107,6 +129,31 @@ export default function DomainsManagementPage() {
       }
     } catch {
       showToast('Network error deleting domain', 'error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleBulkDeleteDomains = async (permanent: boolean) => {
+    if (selectedDomainIds.length === 0) return;
+    setIsProcessing(true);
+    try {
+      const res = await fetch('/api/admin/domains', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedDomainIds, permanent }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        showToast(json.message || `Deleted ${selectedDomainIds.length} domain(s)`, 'success');
+        setSelectedDomainIds([]);
+        setIsBulkDeleteModalOpen(false);
+        fetchDomains();
+      } else {
+        showToast(json.error || 'Failed to delete domains', 'error');
+      }
+    } catch {
+      showToast('Network error deleting domains', 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -160,18 +207,55 @@ export default function DomainsManagementPage() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center gap-3 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-xs">
-        <Search className="w-4 h-4 text-slate-400" />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Filter domains by name or registrar..."
-          className="flex-1 bg-transparent text-xs text-slate-900 dark:text-white focus:outline-none placeholder:text-slate-400"
-        />
-        <Badge variant="outline" className="text-[10px] font-mono">
-          {filteredDomains.length} Domains
-        </Badge>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-xs">
+        <div className="flex items-center gap-3 flex-1">
+          <button
+            type="button"
+            onClick={handleSelectAll}
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer flex items-center gap-2 text-xs font-semibold"
+            title="Select all domains"
+          >
+            {selectedDomainIds.length === filteredDomains.length && filteredDomains.length > 0 ? (
+              <CheckSquare className="w-4 h-4 text-indigo-600" />
+            ) : (
+              <Square className="w-4 h-4" />
+            )}
+            <span className="hidden sm:inline">Select All</span>
+          </button>
+
+          <div className="h-4 w-px bg-slate-200 dark:border-slate-800 hidden sm:block" />
+
+          <Search className="w-4 h-4 text-slate-400 shrink-0" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Filter domains by name or registrar..."
+            className="flex-1 bg-transparent text-xs text-slate-900 dark:text-white focus:outline-none placeholder:text-slate-400"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 self-end sm:self-center">
+          {selectedDomainIds.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                {selectedDomainIds.length} selected
+              </span>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setIsBulkDeleteModalOpen(true)}
+                className="h-8 text-xs rounded-xl gap-1.5 font-bold shadow-sm"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Selected</span>
+              </Button>
+            </div>
+          )}
+          <Badge variant="outline" className="text-[10px] font-mono">
+            {filteredDomains.length} Domains
+          </Badge>
+        </div>
       </div>
 
       {/* Domains Table / Cards */}
@@ -188,57 +272,78 @@ export default function DomainsManagementPage() {
             <p className="text-xs text-slate-500">No domains registered yet</p>
           </Card>
         ) : (
-          filteredDomains.map((domain) => (
-            <Card
-              key={domain.id}
-              className="rounded-2xl border-slate-200 dark:border-slate-800/90 bg-white dark:bg-slate-900/60 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-            >
-              <div className="space-y-1.5 min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-mono font-bold text-sm text-slate-900 dark:text-white">
-                    {domain.domain}
-                  </span>
-                  <Badge variant="success" className="text-[9px] uppercase font-bold">
-                    Verified
-                  </Badge>
-                  <span className="text-slate-400 text-xs">•</span>
-                  <span className="text-slate-500 text-xs">
-                    Registrar: <b>{domain.registrar || 'Direct'}</b>
-                  </span>
+          filteredDomains.map((domain) => {
+            const isSelected = selectedDomainIds.includes(domain.id);
+            return (
+              <Card
+                key={domain.id}
+                className={`rounded-2xl border transition-all duration-200 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                  isSelected
+                    ? 'border-indigo-500 dark:border-indigo-600 bg-indigo-50/20 dark:bg-indigo-950/20 ring-2 ring-indigo-500/20'
+                    : 'border-slate-200 dark:border-slate-800/90 bg-white dark:bg-slate-900/60'
+                }`}
+              >
+                <div className="flex items-start sm:items-center gap-3 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleSelect(domain.id)}
+                    className="mt-1 sm:mt-0 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer shrink-0"
+                  >
+                    {isSelected ? (
+                      <CheckSquare className="w-4 h-4 text-indigo-600" />
+                    ) : (
+                      <Square className="w-4 h-4" />
+                    )}
+                  </button>
+
+                  <div className="space-y-1.5 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono font-bold text-sm text-slate-900 dark:text-white">
+                        {domain.domain}
+                      </span>
+                      <Badge variant="success" className="text-[9px] uppercase font-bold">
+                        Verified
+                      </Badge>
+                      <span className="text-slate-400 text-xs">•</span>
+                      <span className="text-slate-500 text-xs">
+                        Registrar: <b>{domain.registrar || 'Direct'}</b>
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 pt-1">
+                      <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
+                        <ShieldCheck className="w-3.5 h-3.5" /> SSL Active
+                      </span>
+                      <span className="flex items-center gap-1.5 text-[11px]">
+                        <Calendar className="w-3.5 h-3.5" />
+                        Renews: {domain.expiryDate ? new Date(domain.expiryDate).toLocaleDateString() : 'Auto-Renew'}
+                      </span>
+                      <span className="text-[11px] font-mono text-indigo-600 dark:text-indigo-400">
+                        {domain._count?.dnsRecords || 2} DNS Records
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 pt-1">
-                  <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
-                    <ShieldCheck className="w-3.5 h-3.5" /> SSL Active
-                  </span>
-                  <span className="flex items-center gap-1.5 text-[11px]">
-                    <Calendar className="w-3.5 h-3.5" />
-                    Renews: {domain.expiryDate ? new Date(domain.expiryDate).toLocaleDateString() : 'Auto-Renew'}
-                  </span>
-                  <span className="text-[11px] font-mono text-indigo-600 dark:text-indigo-400">
-                    {domain._count?.dnsRecords || 2} DNS Records
-                  </span>
-                </div>
-              </div>
+                <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                  <Link href={`/admin/websites/dns?domainId=${domain.id}`}>
+                    <Button size="sm" variant="outline" className="h-8 text-xs rounded-xl">
+                      Manage DNS
+                    </Button>
+                  </Link>
 
-              <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                <Link href={`/admin/websites/dns?domainId=${domain.id}`}>
-                  <Button size="sm" variant="outline" className="h-8 text-xs rounded-xl">
-                    Manage DNS
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setDomainToDelete(domain)}
+                    className="h-8 w-8 p-0 rounded-lg text-slate-400 hover:text-rose-600 cursor-pointer"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
-                </Link>
-
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setDomainToDelete(domain)}
-                  className="h-8 w-8 p-0 rounded-lg text-slate-400 hover:text-rose-600"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </Card>
-          ))
+                </div>
+              </Card>
+            );
+          })
         )}
       </div>
 
@@ -357,6 +462,71 @@ export default function DomainsManagementPage() {
               size="sm"
               disabled={isProcessing}
               onClick={() => setDomainToDelete(null)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Bulk Delete Modal */}
+      <Modal
+        isOpen={isBulkDeleteModalOpen}
+        onClose={() => !isProcessing && setIsBulkDeleteModalOpen(false)}
+        title={`Delete ${selectedDomainIds.length} Selected Domains`}
+      >
+        <div className="space-y-4 text-xs">
+          <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-xl text-amber-800 dark:text-amber-200">
+            <p className="font-semibold mb-1">Bulk Domain Removal</p>
+            <p className="text-[11px] leading-relaxed">
+              You have selected <strong>{selectedDomainIds.length}</strong> domain(s). Choose whether to archive them (recoverable from central trash) or permanently purge them from the database.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 space-y-2">
+              <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
+                Move to Archive
+              </span>
+              <p className="text-[11px] text-slate-500">
+                Archive all {selectedDomainIds.length} domains. Can be restored anytime.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                isLoading={isProcessing}
+                onClick={() => handleBulkDeleteDomains(false)}
+                className="w-full text-xs font-semibold rounded-lg"
+              >
+                Archive Selected ({selectedDomainIds.length})
+              </Button>
+            </div>
+
+            <div className="p-3.5 rounded-xl border border-rose-300 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/20 space-y-2">
+              <span className="text-xs font-bold text-rose-600 dark:text-rose-400">
+                Real Delete (Permanent)
+              </span>
+              <p className="text-[11px] text-rose-700/80 dark:text-rose-300/80">
+                Permanently purge all selected domains and associated DNS records.
+              </p>
+              <Button
+                variant="destructive"
+                size="sm"
+                isLoading={isProcessing}
+                onClick={() => handleBulkDeleteDomains(true)}
+                className="w-full text-xs font-bold rounded-lg"
+              >
+                Delete Forever ({selectedDomainIds.length})
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={isProcessing}
+              onClick={() => setIsBulkDeleteModalOpen(false)}
             >
               Cancel
             </Button>

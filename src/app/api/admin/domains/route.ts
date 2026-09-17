@@ -13,8 +13,12 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const workspaceIdParam = searchParams.get('workspaceId');
 
-    // In Admin Center, show all domains unless a specific workspace is explicitly requested
-    const whereClause = workspaceIdParam ? { workspaceId: workspaceIdParam } : {};
+    // In Admin Center, show active domains (excluding archived)
+    const includeArchived = searchParams.get('includeArchived') === 'true';
+    const whereClause: any = workspaceIdParam ? { workspaceId: workspaceIdParam } : {};
+    if (!includeArchived) {
+      whereClause.status = { not: 'ARCHIVED' };
+    }
 
     let domains = await prisma.domain.findMany({
       where: whereClause,
@@ -225,7 +229,7 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-// DELETE: Delete domain
+// DELETE: Delete domain (Single or Bulk)
 export async function DELETE(req: NextRequest) {
   try {
     const auth = await getAuthContext();
@@ -234,41 +238,68 @@ export async function DELETE(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
-    const permanent = searchParams.get('permanent') === 'true';
+    const queryId = searchParams.get('id');
+    const queryPermanent = searchParams.get('permanent') === 'true';
 
-    if (!id) {
-      return NextResponse.json({ error: 'Domain ID is required' }, { status: 400 });
+    let ids: string[] = [];
+    let permanent = queryPermanent;
+
+    if (queryId) {
+      ids = [queryId];
+    } else {
+      try {
+        const body = await req.json();
+        if (Array.isArray(body.ids)) {
+          ids = body.ids;
+        } else if (body.id) {
+          ids = [body.id];
+        }
+        if (body.permanent !== undefined) {
+          permanent = Boolean(body.permanent);
+        }
+      } catch {
+        // body not present
+      }
     }
 
-    const domain = await prisma.domain.findUnique({ where: { id } });
-    if (!domain) {
-      return NextResponse.json({ error: 'Domain not found' }, { status: 404 });
+    if (ids.length === 0) {
+      return NextResponse.json({ error: 'Domain ID or array of IDs is required' }, { status: 400 });
     }
 
     if (permanent) {
-      await prisma.domain.delete({ where: { id } });
+      // First clean up dns records
+      await prisma.dnsRecord.deleteMany({
+        where: { domainId: { in: ids } },
+      }).catch(() => {});
+
+      await prisma.domain.deleteMany({
+        where: { id: { in: ids } },
+      });
     } else {
-      await prisma.domain.update({
-        where: { id },
+      await prisma.domain.updateMany({
+        where: { id: { in: ids } },
         data: { status: 'ARCHIVED' },
       });
     }
 
-    await prisma.auditLog.create({
-      data: {
-        workspaceId: domain.workspaceId,
-        userId: auth.user.id,
-        action: permanent ? 'DOMAIN_PERMANENTLY_DELETED' : 'DOMAIN_ARCHIVED',
-        entityType: 'Domain',
-        entityId: id,
-        metadataJson: JSON.stringify({ domain: domain.domain, permanent }),
-      },
-    });
+    for (const id of ids) {
+      await prisma.auditLog.create({
+        data: {
+          userId: auth.user.id,
+          action: permanent ? 'DOMAIN_PERMANENTLY_DELETED' : 'DOMAIN_ARCHIVED',
+          entityType: 'Domain',
+          entityId: id,
+          metadataJson: JSON.stringify({ permanent }),
+        },
+      }).catch(() => {});
+    }
 
     return NextResponse.json({
       success: true,
-      message: permanent ? 'Domain permanently deleted' : 'Domain archived',
+      message: permanent
+        ? `Successfully purged ${ids.length} domain(s) forever.`
+        : `Archived ${ids.length} domain(s) to Trash.`,
+      count: ids.length,
       permanent,
     });
   } catch (error: any) {

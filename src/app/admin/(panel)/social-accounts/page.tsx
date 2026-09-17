@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   ShieldCheck,
+  Shield,
   RefreshCw,
   Zap,
   Trash2,
@@ -18,8 +19,11 @@ import {
   Search,
   KeyRound,
   Layers,
-  Shield,
   Check,
+  Copy,
+  ChevronDown,
+  ChevronUp,
+  EyeOff,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +32,7 @@ import { Modal } from '@/components/ui/modal';
 import { useToast } from '@/components/ui/toast';
 import { SocialPlatformIcon } from '@/components/brand/platform-icons';
 import { format } from 'date-fns';
+import { FEATURED_MODAL_SLUGS, PLATFORM_DEV_PORTALS } from '@/components/views/social-accounts-view';
 
 const ADMIN_NETWORKS = [
   { slug: 'instagram', name: 'Instagram', category: 'Major', api: 'Meta Graph API v19.0', brandColor: '#E4405F', tagline: 'Reels, Stories & Carousel Feed', limit: 2200 },
@@ -71,6 +76,13 @@ export default function AdminSocialAccountsPage() {
   const [modalCategory, setModalCategory] = useState('All');
   const [modalSearch, setModalSearch] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
+  const [showAllModalNetworks, setShowAllModalNetworks] = useState<boolean>(false);
+  const [customClientId, setCustomClientId] = useState<string>('');
+  const [customClientSecret, setCustomClientSecret] = useState<string>('');
+  const [showSecret, setShowSecret] = useState<boolean>(false);
+  const [isSavingCreds, setIsSavingCreds] = useState<boolean>(false);
+  const [showCredsEditor, setShowCredsEditor] = useState<boolean>(false);
+  const [copiedCallback, setCopiedCallback] = useState<boolean>(false);
 
   // Single action states
   const [syncingId, setSyncingId] = useState<string | null>(null);
@@ -108,6 +120,77 @@ export default function AdminSocialAccountsPage() {
     fetchAccounts();
     fetchPlatforms();
   }, []);
+
+  useEffect(() => {
+    const plat = platforms.find((p) => p.slug === selectedPlatformSlug);
+    if (plat?.clientId) {
+      setCustomClientId(plat.clientId);
+    } else {
+      setCustomClientId('');
+    }
+    setCustomClientSecret('');
+    setShowCredsEditor(false);
+  }, [selectedPlatformSlug, platforms]);
+
+  const handleCopyCallback = (slug: string) => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://socialflow-zeta-one.vercel.app';
+    const callbackUrl = `${origin}/api/social-accounts/callback/${slug.toLowerCase()}`;
+    navigator.clipboard.writeText(callbackUrl);
+    setCopiedCallback(true);
+    showToast(`Copied OAuth Callback URL for ${slug.toUpperCase()}!`, 'success');
+    setTimeout(() => setCopiedCallback(false), 2500);
+  };
+
+  const handleSaveCredsAndConnect = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!customClientId.trim()) {
+      showToast(`Please enter the ${selectedPlatformSlug.toUpperCase()} Client ID / App Key`, 'warning');
+      return;
+    }
+
+    setIsSavingCreds(true);
+    try {
+      const res = await fetch('/api/admin/platforms/credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platform: selectedPlatformSlug,
+          clientId: customClientId.trim(),
+          clientSecret: customClientSecret.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        showToast(data.error || 'Failed to save developer credentials', 'error');
+        setIsSavingCreds(false);
+        return;
+      }
+
+      showToast(`Credentials saved! Initiating official ${selectedPlatformSlug.toUpperCase()} OAuth...`, 'success');
+      await fetchPlatforms();
+
+      const connectRes = await fetch('/api/social-accounts/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ platform: selectedPlatformSlug.toUpperCase() }),
+      });
+
+      const connectData = await connectRes.json();
+      if (connectRes.ok && connectData.mode === 'OAUTH_REDIRECT' && connectData.authUrl) {
+        window.location.href = connectData.authUrl;
+        return;
+      }
+
+      if (connectData.error) {
+        showToast(connectData.error, 'error');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error saving credentials and connecting', 'error');
+    } finally {
+      setIsSavingCreds(false);
+    }
+  };
 
   const handleConnectSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -789,7 +872,7 @@ export default function AdminSocialAccountsPage() {
           maxWidth="2xl"
         >
           <form onSubmit={handleConnectSubmit} className="space-y-5 py-1">
-            {/* Categories and Search Controls */}
+            {/* Step 1: Select Network Provider */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
@@ -802,119 +885,163 @@ export default function AdminSocialAccountsPage() {
                 </div>
               </div>
 
-              {/* Category Filter Tabs */}
-              <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                {[
-                  { id: 'All', label: 'All (20)' },
-                  { id: 'Major', label: 'Major Brands' },
-                  { id: 'Video & Media', label: 'Video & Media' },
-                  { id: 'Messaging & Community', label: 'Messaging & Community' },
-                  { id: 'Publishing & Blogs', label: 'Publishing & Blogs' },
-                ].map((tab) => (
-                  <button
-                    type="button"
-                    key={tab.id}
-                    onClick={() => setModalCategory(tab.id)}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
-                      modalCategory === tab.id
-                        ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/30'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
+              {/* Top Featured Networks (Visible by default) & Expandable 20 Networks */}
+              {(() => {
+                const featuredList = ADMIN_NETWORKS.filter((p) =>
+                  FEATURED_MODAL_SLUGS.includes(p.slug) || (!showAllModalNetworks && p.slug === selectedPlatformSlug)
+                );
 
-              {/* Search Filter */}
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={modalSearch}
-                  onChange={(e) => setModalSearch(e.target.value)}
-                  placeholder="Filter networks by brand name, protocol, or API..."
-                  className="w-full pl-9 pr-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all"
-                />
-              </div>
-            </div>
+                const activeList = showAllModalNetworks
+                  ? ADMIN_NETWORKS.filter((p) => {
+                      const matchesCat = modalCategory === 'All' || p.category === modalCategory;
+                      const matchesSearch =
+                        !modalSearch ||
+                        p.name.toLowerCase().includes(modalSearch.toLowerCase()) ||
+                        p.slug.toLowerCase().includes(modalSearch.toLowerCase());
+                      return matchesCat && matchesSearch;
+                    })
+                  : featuredList;
 
-            {/* Platform Selection Grid */}
-            {(() => {
-              const filteredNets = ADMIN_NETWORKS.filter((p) => {
-                const matchesCat = modalCategory === 'All' || p.category === modalCategory;
-                const matchesSearch =
-                  !modalSearch ||
-                  p.name.toLowerCase().includes(modalSearch.toLowerCase()) ||
-                  p.slug.toLowerCase().includes(modalSearch.toLowerCase());
-                return matchesCat && matchesSearch;
-              });
-
-              return (
-                <div className="max-h-[250px] overflow-y-auto pr-1 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  {filteredNets.map((plat) => {
-                    const isSelected = selectedPlatformSlug === plat.slug;
-                    const platFromApi = platforms.find((p) => p.slug === plat.slug);
-                    const isConfigured = Boolean(platFromApi?.isConfigured);
-
-                    return (
-                      <button
-                        type="button"
-                        key={plat.slug}
-                        onClick={() => setSelectedPlatformSlug(plat.slug)}
-                        className={`group p-3 rounded-2xl border-2 text-left flex flex-col justify-between gap-2 transition-all duration-200 cursor-pointer relative overflow-hidden ${
-                          isSelected
-                            ? 'border-indigo-600 dark:border-indigo-400 bg-indigo-50/95 dark:bg-indigo-950/70 shadow-lg shadow-indigo-500/15 ring-4 ring-indigo-500/20 scale-[1.02]'
-                            : 'border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/80 hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-md hover:-translate-y-0.5'
-                        }`}
-                      >
-                        {/* Brand Hover Accent */}
-                        <div
-                          className="absolute top-0 left-0 right-0 h-1 transition-opacity duration-300"
-                          style={{
-                            backgroundColor: plat.brandColor || '#6366F1',
-                            opacity: isSelected ? 1 : 0,
-                          }}
-                        />
-
-                        <div className="flex items-center justify-between w-full">
-                          <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xs group-hover:scale-110 transition-transform duration-200">
-                            <SocialPlatformIcon platform={plat.slug} size="sm" />
-                          </div>
-                          {isSelected ? (
-                            <div className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xs">
-                              <Check className="w-3 h-3 stroke-[3]" />
-                            </div>
-                          ) : (
-                            <span
-                              className={`w-2 h-2 rounded-full ${
-                                isConfigured ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'
+                return (
+                  <div className="space-y-3">
+                    {/* When Expanded: show Categories & Search */}
+                    {showAllModalNetworks && (
+                      <div className="space-y-2.5 p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 animate-in fade-in duration-200">
+                        {/* Category Filter Tabs */}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {[
+                            { id: 'All', label: 'All (20)' },
+                            { id: 'Major', label: 'Major Brands' },
+                            { id: 'Video & Media', label: 'Video & Media' },
+                            { id: 'Messaging & Community', label: 'Messaging & Community' },
+                            { id: 'Publishing & Blogs', label: 'Publishing & Blogs' },
+                          ].map((tab) => (
+                            <button
+                              type="button"
+                              key={tab.id}
+                              onClick={() => setModalCategory(tab.id)}
+                              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
+                                modalCategory === tab.id
+                                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/30'
+                                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
                               }`}
-                              title={isConfigured ? 'Configured' : 'Setup Required'}
-                            />
-                          )}
+                            >
+                              {tab.label}
+                            </button>
+                          ))}
                         </div>
 
-                        <div className="min-w-0">
-                          <span className="block text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                            {plat.name}
-                          </span>
-                          <span className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                            {plat.tagline}
-                          </span>
+                        {/* Search Filter */}
+                        <div className="relative">
+                          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                          <input
+                            type="text"
+                            value={modalSearch}
+                            onChange={(e) => setModalSearch(e.target.value)}
+                            placeholder="Filter networks by brand name, protocol, or API..."
+                            className="w-full pl-9 pr-3 py-1.5 rounded-xl text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all"
+                          />
                         </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              );
-            })()}
+                      </div>
+                    )}
+
+                    {/* Platforms Grid */}
+                    <div className={`grid grid-cols-2 sm:grid-cols-4 gap-2.5 ${showAllModalNetworks ? 'max-h-[240px] overflow-y-auto pr-1' : ''}`}>
+                      {activeList.map((plat) => {
+                        const isSelected = selectedPlatformSlug === plat.slug;
+                        const platFromApi = platforms.find((p) => p.slug === plat.slug);
+                        const isConfigured = Boolean(platFromApi?.isConfigured);
+
+                        return (
+                          <button
+                            type="button"
+                            key={plat.slug}
+                            onClick={() => setSelectedPlatformSlug(plat.slug)}
+                            className={`group p-2.5 rounded-2xl border-2 text-left flex flex-col justify-between gap-1.5 transition-all duration-200 cursor-pointer relative overflow-hidden ${
+                              isSelected
+                                ? 'border-indigo-600 dark:border-indigo-400 bg-indigo-50/95 dark:bg-indigo-950/70 shadow-lg shadow-indigo-500/15 ring-4 ring-indigo-500/20 scale-[1.02]'
+                                : 'border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/80 hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-md hover:-translate-y-0.5'
+                            }`}
+                          >
+                            <div
+                              className="absolute top-0 left-0 right-0 h-1 transition-opacity duration-300"
+                              style={{
+                                backgroundColor: plat.brandColor || '#6366F1',
+                                opacity: isSelected ? 1 : 0,
+                              }}
+                            />
+
+                            <div className="flex items-center justify-between w-full">
+                              <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xs group-hover:scale-110 transition-transform duration-200">
+                                <SocialPlatformIcon platform={plat.slug} size="sm" />
+                              </div>
+                              {isSelected ? (
+                                <div className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                                  <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                </div>
+                              ) : (
+                                <span
+                                  className={`w-2 h-2 rounded-full ${
+                                    isConfigured ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'
+                                  }`}
+                                  title={isConfigured ? 'Live API Ready' : 'Setup Required'}
+                                />
+                              )}
+                            </div>
+
+                            <div className="min-w-0">
+                              <span className="block text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                {plat.name}
+                              </span>
+                              <span className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                                {plat.tagline}
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Expand / Collapse Button */}
+                    <button
+                      type="button"
+                      onClick={() => setShowAllModalNetworks(!showAllModalNetworks)}
+                      className="w-full py-2 px-3 rounded-xl border border-dashed border-indigo-300 dark:border-indigo-800 bg-indigo-50/40 dark:bg-indigo-950/30 hover:bg-indigo-100/60 dark:hover:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                    >
+                      {showAllModalNetworks ? (
+                        <>
+                          <ChevronUp className="w-3.5 h-3.5" />
+                          <span>Collapse Platform List (Show Top Networks)</span>
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="w-3.5 h-3.5" />
+                          <span>+ View All 20 Certified Networks (+16 More Channels)</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                );
+              })()}
+            </div>
 
             {/* Active Platform Banner & Actions */}
             {(() => {
               const activeNet = ADMIN_NETWORKS.find((p) => p.slug === selectedPlatformSlug) || ADMIN_NETWORKS[0];
               const platFromApi = platforms.find((p) => p.slug === selectedPlatformSlug);
               const isConfigured = Boolean(platFromApi?.isConfigured);
+              const devPortal = PLATFORM_DEV_PORTALS[selectedPlatformSlug] || {
+                portalName: `${activeNet.name} Developer Portal`,
+                portalUrl: 'https://developers.facebook.com/apps/',
+                idLabel: 'Client ID / App Key',
+                idPlaceholder: 'Enter Client ID or App Key',
+                secretLabel: 'Client Secret / App Secret',
+                secretPlaceholder: 'Enter Client Secret',
+                instructions: `Register an official developer app on ${activeNet.name} and configure the OAuth Redirect URI below.`,
+              };
+
+              const origin = typeof window !== 'undefined' ? window.location.origin : 'https://socialflow-zeta-one.vercel.app';
+              const callbackUrl = `${origin}/api/social-accounts/callback/${activeNet.slug}`;
 
               return (
                 <div className="space-y-4">
@@ -966,9 +1093,123 @@ export default function AdminSocialAccountsPage() {
                     </div>
                   </div>
 
-                  {/* Connection Button or Missing Credentials Warning */}
-                  {isConfigured ? (
-                    <div className="pt-1">
+                  {/* Real Developer Credentials Setup Card OR Ready Button */}
+                  {(!isConfigured || showCredsEditor) ? (
+                    <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/5 via-indigo-500/5 to-purple-500/5 border border-amber-500/30 space-y-3.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <KeyRound className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                          <h5 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">
+                            Configure Official {activeNet.name} Developer API
+                          </h5>
+                        </div>
+                        <a
+                          href={devPortal.portalUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                        >
+                          <span>{devPortal.portalName}</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                        {devPortal.instructions}
+                      </p>
+
+                      {/* OAuth Redirect URI Copy Box */}
+                      <div className="p-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
+                        <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                          <span>OAuth 2.0 Redirect / Callback URI</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyCallback(activeNet.slug)}
+                            className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-bold cursor-pointer"
+                          >
+                            {copiedCallback ? (
+                              <>
+                                <Check className="w-3 h-3 text-emerald-500" />
+                                <span className="text-emerald-500">Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3" />
+                                <span>Copy URI</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        <p className="font-mono text-[11px] text-indigo-600 dark:text-indigo-400 break-all select-all">
+                          {callbackUrl}
+                        </p>
+                      </div>
+
+                      {/* Inputs: Client ID & Secret */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                            {devPortal.idLabel} <span className="text-rose-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={customClientId}
+                            onChange={(e) => setCustomClientId(e.target.value)}
+                            placeholder={devPortal.idPlaceholder}
+                            className="w-full px-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                              {devPortal.secretLabel}
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setShowSecret(!showSecret)}
+                              className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center gap-1 cursor-pointer"
+                            >
+                              {showSecret ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                              <span>{showSecret ? 'Hide' : 'Show'}</span>
+                            </button>
+                          </div>
+                          <input
+                            type={showSecret ? 'text' : 'password'}
+                            value={customClientSecret}
+                            onChange={(e) => setCustomClientSecret(e.target.value)}
+                            placeholder={devPortal.secretPlaceholder}
+                            className="w-full px-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-1">
+                        <Button
+                          type="button"
+                          onClick={handleSaveCredsAndConnect}
+                          isLoading={isSavingCreds}
+                          className="flex-1 py-2.5 h-auto rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 gap-2 cursor-pointer"
+                        >
+                          <ShieldCheck className="w-4 h-4" />
+                          <span>Save Credentials &amp; Connect Now</span>
+                        </Button>
+                        {showCredsEditor && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowCredsEditor(false)}
+                            className="rounded-xl text-xs cursor-pointer"
+                          >
+                            Cancel
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 pt-1">
                       <Button
                         type="submit"
                         isLoading={isConnecting}
@@ -977,36 +1218,16 @@ export default function AdminSocialAccountsPage() {
                         <SocialPlatformIcon platform={activeNet.slug} size="sm" />
                         <span>Authorize &amp; Connect with {activeNet.name}</span>
                       </Button>
-                      <p className="text-[11px] text-center text-slate-400 dark:text-slate-500 mt-2">
-                        Redirects directly to official {activeNet.name} OAuth authorization code flow.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/25 space-y-3">
-                      <div className="flex items-center gap-2 text-xs font-bold text-amber-700 dark:text-amber-400">
-                        <AlertTriangle className="w-4 h-4 shrink-0" />
-                        <span>CONFIGURATION REQUIRED IN SERVER ENVIRONMENT</span>
-                      </div>
-                      <p className="text-xs text-amber-800/80 dark:text-amber-300/80 leading-relaxed">
-                        {activeNet.name} API developer credentials (Client ID / Secret) are not yet configured in server environment variables. Configure them in Admin Settings to enable official connection.
-                      </p>
-                      <div className="flex items-center gap-3 pt-1">
-                        <Link
-                          href="/admin/settings/integrations"
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-sm transition-colors"
+                      <div className="flex items-center justify-between text-[11px] text-slate-500 px-1">
+                        <span>Redirects directly to official {activeNet.name} OAuth dialog.</span>
+                        <button
+                          type="button"
+                          onClick={() => setShowCredsEditor(true)}
+                          className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline cursor-pointer flex items-center gap-1"
                         >
-                          <span>Configure in Admin Settings</span>
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </Link>
-                        <Button
-                          type="submit"
-                          variant="outline"
-                          size="sm"
-                          isLoading={isConnecting}
-                          className="text-xs font-semibold rounded-lg"
-                        >
-                          Check Credentials
-                        </Button>
+                          <span>Update API Keys</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </button>
                       </div>
                     </div>
                   )}

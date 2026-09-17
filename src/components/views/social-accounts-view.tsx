@@ -41,6 +41,7 @@ import {
   Zap,
   ChevronDown,
   ChevronUp,
+  Copy,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -292,6 +293,191 @@ const CORE_ENTERPRISE_NETWORKS = [
   },
 ];
 
+export const FEATURED_MODAL_SLUGS = ['instagram', 'facebook', 'linkedin', 'x'];
+
+export const PLATFORM_DEV_PORTALS: Record<string, { portalName: string; portalUrl: string; idLabel: string; idPlaceholder: string; secretLabel: string; secretPlaceholder: string; instructions: string }> = {
+  instagram: {
+    portalName: 'Meta for Developers',
+    portalUrl: 'https://developers.facebook.com/apps/',
+    idLabel: 'Meta App ID',
+    idPlaceholder: 'e.g. 109283746501928',
+    secretLabel: 'Meta App Secret',
+    secretPlaceholder: 'e.g. 3a8b2c1d0e9f8a7b6c5d4e3f2a1b0c9d',
+    instructions: 'Create an app on Meta for Developers, add "Instagram Graph API" product, and add the OAuth Redirect URI below.',
+  },
+  facebook: {
+    portalName: 'Meta for Developers',
+    portalUrl: 'https://developers.facebook.com/apps/',
+    idLabel: 'Meta App ID',
+    idPlaceholder: 'e.g. 109283746501928',
+    secretLabel: 'Meta App Secret',
+    secretPlaceholder: 'e.g. 3a8b2c1d0e9f8a7b6c5d4e3f2a1b0c9d',
+    instructions: 'Add "Facebook Login for Business" in Meta Developer Portal and add the Redirect URI to Allowed OAuth Redirects.',
+  },
+  x: {
+    portalName: 'X Developer Portal',
+    portalUrl: 'https://developer.x.com/en/portal/dashboard',
+    idLabel: 'OAuth 2.0 Client ID',
+    idPlaceholder: 'e.g. M1Z1TXZxV1V2Y09...',
+    secretLabel: 'OAuth 2.0 Client Secret',
+    secretPlaceholder: 'e.g. v_xK8L2...secret',
+    instructions: 'Create a Project & App in X Developer Portal, configure User Authentication with OAuth 2.0 and paste the Callback URL.',
+  },
+  linkedin: {
+    portalName: 'LinkedIn Developer Portal',
+    portalUrl: 'https://www.linkedin.com/developers/apps',
+    idLabel: 'LinkedIn Client ID',
+    idPlaceholder: 'e.g. 77xyzabc123456',
+    secretLabel: 'LinkedIn Client Secret',
+    secretPlaceholder: 'e.g. WxyzAbcd12345678',
+    instructions: 'Create an App in LinkedIn Developers, enable "Share on LinkedIn" & "Sign In with LinkedIn using OpenID Connect", then add the Redirect URI.',
+  },
+  youtube: {
+    portalName: 'Google Cloud Console',
+    portalUrl: 'https://console.cloud.google.com/apis/credentials',
+    idLabel: 'Google Client ID',
+    idPlaceholder: 'e.g. 123456789-xyz.apps.googleusercontent.com',
+    secretLabel: 'Google Client Secret',
+    secretPlaceholder: 'e.g. GOCSPX-xxxxxxxxxxxxx',
+    instructions: 'Enable YouTube Data API v3 in Google Cloud Console, create OAuth 2.0 Web Client ID, and authorize the Redirect URI.',
+  },
+  tiktok: {
+    portalName: 'TikTok for Developers',
+    portalUrl: 'https://developers.tiktok.com/',
+    idLabel: 'TikTok Client Key',
+    idPlaceholder: 'e.g. aw1234567890',
+    secretLabel: 'TikTok Client Secret',
+    secretPlaceholder: 'e.g. 9876543210fedcba',
+    instructions: 'Register an app in TikTok Developer Portal, add Login Kit & Share Kit, and add the Redirect URI in App Details.',
+  },
+  pinterest: {
+    portalName: 'Pinterest Developers',
+    portalUrl: 'https://developers.pinterest.com/apps/',
+    idLabel: 'Pinterest App ID',
+    idPlaceholder: 'e.g. 1498765',
+    secretLabel: 'Pinterest App Secret Key',
+    secretPlaceholder: 'e.g. abc123def456...',
+    instructions: 'Create an App in Pinterest Developers, configure OAuth with pins:read, pins:write, boards:read, and add the Redirect URI.',
+  },
+  threads: {
+    portalName: 'Meta for Developers (Threads)',
+    portalUrl: 'https://developers.facebook.com/apps/',
+    idLabel: 'Threads App ID (Meta App ID)',
+    idPlaceholder: 'e.g. 109283746501928',
+    secretLabel: 'Threads App Secret',
+    secretPlaceholder: 'e.g. 3a8b2c1d0e9f8a7b6c5d4e3f2a1b0c9d',
+    instructions: 'Create an App in Meta Developers with Threads API access, and add the Redirect URI.',
+  },
+  reddit: {
+    portalName: 'Reddit Developer Apps',
+    portalUrl: 'https://www.reddit.com/prefs/apps',
+    idLabel: 'Reddit Client ID (under app name)',
+    idPlaceholder: 'e.g. 14 chars ID below personal use script',
+    secretLabel: 'Reddit Secret Key',
+    secretPlaceholder: 'e.g. 27 chars secret string',
+    instructions: 'Click "create another app...", select "web app", set redirect uri to the Callback URL below.',
+  },
+  discord: {
+    portalName: 'Discord Developer Portal',
+    portalUrl: 'https://discord.com/developers/applications',
+    idLabel: 'Discord Application ID',
+    idPlaceholder: 'e.g. 121987654321098765',
+    secretLabel: 'Discord Bot Token / Client Secret',
+    secretPlaceholder: 'e.g. MTIxOTg3NjU0MzIxMDk4NzY1...',
+    instructions: 'Create an Application in Discord Portal, enable Bot and OAuth2 Redirect URL to connect servers.',
+  },
+  telegram: {
+    portalName: 'Telegram BotFather',
+    portalUrl: 'https://t.me/BotFather',
+    idLabel: 'Telegram Bot Token',
+    idPlaceholder: 'e.g. 1234567890:ABCdefGhIJKlmNoPQRsTUVwxyZ',
+    secretLabel: 'Channel ID / Username (Optional)',
+    secretPlaceholder: 'e.g. @yourbrandchannel',
+    instructions: 'Open @BotFather on Telegram, send /newbot, copy the HTTP API Bot Token, and add the bot as Admin to your channel.',
+  },
+  whatsapp: {
+    portalName: 'Meta WhatsApp Cloud API',
+    portalUrl: 'https://developers.facebook.com/apps/',
+    idLabel: 'Meta App ID / Access Token',
+    idPlaceholder: 'e.g. EAAG...',
+    secretLabel: 'WhatsApp Phone Number ID',
+    secretPlaceholder: 'e.g. 108765432109876',
+    instructions: 'Set up WhatsApp Cloud API in Meta Developer Portal and get your Phone Number ID and System User Token.',
+  },
+  bluesky: {
+    portalName: 'Bluesky Account Settings',
+    portalUrl: 'https://bsky.app/settings/app-passwords',
+    idLabel: 'Bluesky Handle / Identifier',
+    idPlaceholder: 'e.g. yourbrand.bsky.social',
+    secretLabel: 'App Password',
+    secretPlaceholder: 'e.g. abcd-efgh-ijkl-mnop',
+    instructions: 'Go to Bluesky Settings > App Passwords > Add App Password, and paste it here.',
+  },
+  mastodon: {
+    portalName: 'Mastodon Instance Settings',
+    portalUrl: 'https://mastodon.social/settings/applications',
+    idLabel: 'Access Token',
+    idPlaceholder: 'e.g. 64-character hex access token',
+    secretLabel: 'Instance URL (Optional)',
+    secretPlaceholder: 'e.g. https://mastodon.social',
+    instructions: 'Go to Preferences > Development > New Application on your Mastodon instance, grant read/write scopes, and copy the token.',
+  },
+  tumblr: {
+    portalName: 'Tumblr Applications',
+    portalUrl: 'https://www.tumblr.com/oauth/apps',
+    idLabel: 'OAuth Consumer Key',
+    idPlaceholder: 'e.g. consumer key...',
+    secretLabel: 'Secret Key',
+    secretPlaceholder: 'e.g. secret key...',
+    instructions: 'Register an application on Tumblr and add the Default Callback URL.',
+  },
+  medium: {
+    portalName: 'Medium Integration Tokens',
+    portalUrl: 'https://medium.com/me/settings/security',
+    idLabel: 'Integration Token / Client ID',
+    idPlaceholder: 'e.g. 297f6c...',
+    secretLabel: 'Client Secret (Optional for token)',
+    secretPlaceholder: 'e.g. client secret...',
+    instructions: 'Go to Medium Settings > Security and apps > Integration tokens to generate an access token.',
+  },
+  quora: {
+    portalName: 'Quora Developer',
+    portalUrl: 'https://www.quora.com/',
+    idLabel: 'Quora API Access Token',
+    idPlaceholder: 'e.g. quora token...',
+    secretLabel: 'Account ID (Optional)',
+    secretPlaceholder: 'e.g. optional...',
+    instructions: 'Enter your authorized Quora Partner / Business access token.',
+  },
+  wordpress: {
+    portalName: 'WordPress Site / Dev Portal',
+    portalUrl: 'https://developer.wordpress.com/apps/',
+    idLabel: 'WordPress Site URL or Client ID',
+    idPlaceholder: 'e.g. https://yourblog.com',
+    secretLabel: 'Application Password / Secret',
+    secretPlaceholder: 'e.g. xxxx xxxx xxxx xxxx',
+    instructions: 'Generate an Application Password in WordPress Admin (Users > Profile > Application Passwords).',
+  },
+  vimeo: {
+    portalName: 'Vimeo Developer API',
+    portalUrl: 'https://developer.vimeo.com/apps',
+    idLabel: 'Client Identifier',
+    idPlaceholder: 'e.g. vimeo client id...',
+    secretLabel: 'Client Secret',
+    secretPlaceholder: 'e.g. vimeo client secret...',
+    instructions: 'Create an app in Vimeo Developers, configure upload scopes and add the Callback URL.',
+  },
+  snapchat: {
+    portalName: 'Snap Kit Developer Portal',
+    portalUrl: 'https://kit.snapchat.com/manage/apps',
+    idLabel: 'OAuth2 Client ID',
+    idPlaceholder: 'e.g. snapchat client id...',
+    secretLabel: 'Client Secret',
+    secretPlaceholder: 'e.g. snapchat client secret...',
+    instructions: 'Create a Snap Kit app in developer portal, enable Login Kit & Story Kit, and add the Redirect URL.',
+  },
+};
+
 export default function SocialAccountsView() {
   const { showToast } = useToast();
   const [mounted, setMounted] = useState(false);
@@ -315,6 +501,13 @@ export default function SocialAccountsView() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [modalCategory, setModalCategory] = useState<string>('All');
   const [modalSearch, setModalSearch] = useState<string>('');
+  const [showAllModalNetworks, setShowAllModalNetworks] = useState<boolean>(false);
+  const [customClientId, setCustomClientId] = useState<string>('');
+  const [customClientSecret, setCustomClientSecret] = useState<string>('');
+  const [showSecret, setShowSecret] = useState<boolean>(false);
+  const [isSavingCreds, setIsSavingCreds] = useState<boolean>(false);
+  const [showCredsEditor, setShowCredsEditor] = useState<boolean>(false);
+  const [copiedCallback, setCopiedCallback] = useState<boolean>(false);
 
   // Matrix Filter State
   const [matrixCategory, setMatrixCategory] = useState<string>('Major');
@@ -381,6 +574,17 @@ export default function SocialAccountsView() {
     setMounted(true);
     loadData();
   }, []);
+
+  useEffect(() => {
+    const plat = platforms.find((p) => p.slug === selectedPlatformSlug);
+    if (plat?.clientId) {
+      setCustomClientId(plat.clientId);
+    } else {
+      setCustomClientId('');
+    }
+    setCustomClientSecret('');
+    setShowCredsEditor(false);
+  }, [selectedPlatformSlug, platforms]);
 
   // Multi-Selection Handlers
   const handleToggleSelect = (id: string) => {
@@ -648,6 +852,71 @@ export default function SocialAccountsView() {
     }
   };
 
+  // Copy official OAuth Callback URL to clipboard
+  const handleCopyCallback = (slug: string) => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://socialflow-zeta-one.vercel.app';
+    const callbackUrl = `${origin}/api/social-accounts/callback/${slug.toLowerCase()}`;
+    navigator.clipboard.writeText(callbackUrl);
+    setCopiedCallback(true);
+    showToast(`Copied OAuth Callback URL for ${slug.toUpperCase()}!`, 'success');
+    setTimeout(() => setCopiedCallback(false), 2500);
+  };
+
+  // Save Developer Credentials to DB & Trigger Real OAuth Connect immediately
+  const handleSaveCredsAndConnect = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!customClientId.trim()) {
+      showToast(`Please enter the ${selectedPlatformSlug.toUpperCase()} Client ID / App Key`, 'warning');
+      return;
+    }
+
+    setIsSavingCreds(true);
+    try {
+      const res = await fetch('/api/admin/platforms/credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platform: selectedPlatformSlug,
+          clientId: customClientId.trim(),
+          clientSecret: customClientSecret.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        showToast(data.error || 'Failed to save developer credentials', 'error');
+        setIsSavingCreds(false);
+        return;
+      }
+
+      showToast(`Credentials saved! Initiating official ${selectedPlatformSlug.toUpperCase()} OAuth...`, 'success');
+      await fetchPlatforms();
+
+      // Immediately initiate official OAuth authorization
+      const connectRes = await fetch('/api/social-accounts/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platform: selectedPlatformSlug.toUpperCase(),
+        }),
+      });
+
+      const connectData = await connectRes.json();
+      if (connectRes.ok && connectData.mode === 'OAUTH_REDIRECT' && connectData.authUrl) {
+        window.location.href = connectData.authUrl;
+        return;
+      }
+
+      if (connectData.error) {
+        showToast(connectData.error, 'error');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error saving credentials and connecting', 'error');
+    } finally {
+      setIsSavingCreds(false);
+    }
+  };
+
   // Real Database Metrics Calculation (Section 21)
   const totalAudience = accounts.reduce((sum, acc) => {
     return sum + (Number(acc.followers) || 0);
@@ -800,14 +1069,24 @@ export default function SocialAccountsView() {
           </div>
         </Card>
 
-        <Card className="rounded-2xl border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 p-4 shadow-2xs">
+        <Card
+          onClick={() => {
+            const el = document.getElementById('platform-capabilities-section');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+          className="rounded-2xl border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 p-4 shadow-2xs hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-md transition-all cursor-pointer group"
+          title="Click to view all 33+ platform capabilities and specifications"
+        >
           <div className="space-y-1">
-            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Supported Networks</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] uppercase font-bold text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 tracking-wider transition-colors">Supported Networks</span>
+              <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">View All ↓</span>
+            </div>
             <div className="flex items-center justify-between">
               <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400 font-mono">
                 {displayPlatforms.length}
               </span>
-              <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Radio className="w-4 h-4" />
               </div>
             </div>
@@ -1179,7 +1458,7 @@ export default function SocialAccountsView() {
       </div>
 
       {/* Database-Backed Provider Capabilities (Section 15 & 16) */}
-      <div className="pt-4 space-y-4">
+      <div id="platform-capabilities-section" className="pt-4 space-y-4 scroll-mt-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
@@ -1229,12 +1508,18 @@ export default function SocialAccountsView() {
             return (
               <div
                 key={cap.slug || cap.id}
-                className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 hover:border-indigo-400 dark:hover:border-indigo-500/50 transition-all space-y-3"
+                onClick={() => {
+                  setSelectedPlatformSlug(cap.slug || cap.id);
+                  setShowAllModalNetworks(true);
+                  setIsConnectModalOpen(true);
+                }}
+                className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 hover:border-indigo-500 dark:hover:border-indigo-500/70 hover:shadow-md transition-all space-y-3 cursor-pointer group hover:-translate-y-0.5"
+                title={`Click to connect or configure API credentials for ${cap.name}`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <SocialPlatformIcon platform={cap.slug || cap.id} size="sm" />
-                    <span className="text-sm font-bold text-slate-900 dark:text-white">
+                    <span className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                       {cap.name}
                     </span>
                   </div>
@@ -1269,6 +1554,11 @@ export default function SocialAccountsView() {
                     </span>
                   </div>
                 </div>
+
+                <div className="pt-1 flex items-center justify-between text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold opacity-80 group-hover:opacity-100 transition-opacity border-t border-slate-100 dark:border-slate-800/60">
+                  <span>{cap.isConfigured ? 'Connect Channel' : 'Configure API'}</span>
+                  <span className="text-xs group-hover:translate-x-1 transition-transform">→</span>
+                </div>
               </div>
             );
           })}
@@ -1284,7 +1574,7 @@ export default function SocialAccountsView() {
         maxWidth="2xl"
       >
         <form onSubmit={handleConnectSubmit} className="space-y-5 py-1">
-          {/* Header Controls: Categories & Search */}
+          {/* Step 1: Select Social Network */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <label className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
@@ -1297,122 +1587,164 @@ export default function SocialAccountsView() {
               </div>
             </div>
 
-            {/* Category Filter Pills with Smooth Transitions */}
-            <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-              {[
-                { id: 'All', label: 'All (20)' },
-                { id: 'Major', label: 'Major Brands' },
-                { id: 'Video & Media', label: 'Video & Media' },
-                { id: 'Messaging & Community', label: 'Messaging & Community' },
-                { id: 'Publishing & Blogs', label: 'Publishing & Blogs' },
-              ].map((tab) => (
-                <button
-                  type="button"
-                  key={tab.id}
-                  onClick={() => setModalCategory(tab.id)}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
-                    modalCategory === tab.id
-                      ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/30'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+            {/* Top Featured Networks (Visible by default) & Expandable 20 Networks */}
+            {(() => {
+              const featuredList = CORE_ENTERPRISE_NETWORKS.filter((p) =>
+                FEATURED_MODAL_SLUGS.includes(p.slug) || (!showAllModalNetworks && p.slug === selectedPlatformSlug)
+              );
 
-            {/* Quick Filter Search */}
-            <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={modalSearch}
-                onChange={(e) => setModalSearch(e.target.value)}
-                placeholder="Filter networks by name, category, or API type..."
-                className="w-full pl-9 pr-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all"
-              />
-            </div>
+              const activeList = showAllModalNetworks
+                ? CORE_ENTERPRISE_NETWORKS.filter((p) => {
+                    const matchesCat = modalCategory === 'All' || p.category === modalCategory;
+                    const matchesSearch =
+                      !modalSearch ||
+                      p.name.toLowerCase().includes(modalSearch.toLowerCase()) ||
+                      p.slug.toLowerCase().includes(modalSearch.toLowerCase()) ||
+                      p.networkType.toLowerCase().includes(modalSearch.toLowerCase());
+                    return matchesCat && matchesSearch;
+                  })
+                : featuredList;
+
+              return (
+                <div className="space-y-3">
+                  {/* When Expanded: show Categories & Search */}
+                  {showAllModalNetworks && (
+                    <div className="space-y-2.5 p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 animate-in fade-in duration-200">
+                      {/* Category Filter Pills */}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {[
+                          { id: 'All', label: 'All (20)' },
+                          { id: 'Major', label: 'Major Brands' },
+                          { id: 'Video & Media', label: 'Video & Media' },
+                          { id: 'Messaging & Community', label: 'Messaging & Community' },
+                          { id: 'Publishing & Blogs', label: 'Publishing & Blogs' },
+                        ].map((tab) => (
+                          <button
+                            type="button"
+                            key={tab.id}
+                            onClick={() => setModalCategory(tab.id)}
+                            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
+                              modalCategory === tab.id
+                                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/30'
+                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
+                            }`}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Quick Filter Search */}
+                      <div className="relative">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          value={modalSearch}
+                          onChange={(e) => setModalSearch(e.target.value)}
+                          placeholder="Filter networks by name, category, or API type..."
+                          className="w-full pl-9 pr-3 py-1.5 rounded-xl text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Platforms Grid */}
+                  <div className={`grid grid-cols-2 sm:grid-cols-4 gap-2.5 ${showAllModalNetworks ? 'max-h-[240px] overflow-y-auto pr-1' : ''}`}>
+                    {activeList.map((plat) => {
+                      const isSelected = selectedPlatformSlug === plat.slug;
+                      const platFromApi = platforms.find((p) => p.slug === plat.slug);
+                      const isConfigured = Boolean(platFromApi?.isConfigured);
+
+                      return (
+                        <button
+                          type="button"
+                          key={plat.slug}
+                          onClick={() => setSelectedPlatformSlug(plat.slug)}
+                          className={`group p-2.5 rounded-2xl border-2 text-left flex flex-col justify-between gap-1.5 transition-all duration-200 cursor-pointer relative overflow-hidden ${
+                            isSelected
+                              ? 'border-indigo-600 dark:border-indigo-400 bg-indigo-50/95 dark:bg-indigo-950/70 shadow-lg shadow-indigo-500/15 ring-4 ring-indigo-500/20 scale-[1.02]'
+                              : 'border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/80 hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-md hover:-translate-y-0.5'
+                          }`}
+                        >
+                          <div
+                            className="absolute top-0 left-0 right-0 h-1 transition-opacity duration-300"
+                            style={{
+                              backgroundColor: plat.brandColor || '#6366F1',
+                              opacity: isSelected ? 1 : 0,
+                            }}
+                          />
+
+                          <div className="flex items-center justify-between w-full">
+                            <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xs group-hover:scale-110 transition-transform duration-200">
+                              <SocialPlatformIcon platform={plat.slug} size="sm" />
+                            </div>
+                            {isSelected ? (
+                              <div className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                                <Check className="w-2.5 h-2.5 stroke-[3]" />
+                              </div>
+                            ) : (
+                              <span
+                                className={`w-2 h-2 rounded-full ${
+                                  isConfigured ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'
+                                }`}
+                                title={isConfigured ? 'Live API Ready' : 'Setup Required'}
+                              />
+                            )}
+                          </div>
+
+                          <div className="min-w-0">
+                            <span className="block text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                              {plat.name}
+                            </span>
+                            <span className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                              {plat.tagline}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Expand / Collapse Toggle Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowAllModalNetworks(!showAllModalNetworks)}
+                    className="w-full py-2 px-3 rounded-xl border border-dashed border-indigo-300 dark:border-indigo-800 bg-indigo-50/40 dark:bg-indigo-950/30 hover:bg-indigo-100/60 dark:hover:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    {showAllModalNetworks ? (
+                      <>
+                        <ChevronUp className="w-3.5 h-3.5" />
+                        <span>Collapse Platform List (Show Top Networks)</span>
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-3.5 h-3.5" />
+                        <span>+ View All 20 Certified Networks (+16 More Channels)</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              );
+            })()}
           </div>
 
-          {/* Platform Selection Grid with Brand Glow & Hover Animation */}
-          {(() => {
-            const filteredNets = CORE_ENTERPRISE_NETWORKS.filter((p) => {
-              const matchesCat = modalCategory === 'All' || p.category === modalCategory;
-              const matchesSearch =
-                !modalSearch ||
-                p.name.toLowerCase().includes(modalSearch.toLowerCase()) ||
-                p.slug.toLowerCase().includes(modalSearch.toLowerCase()) ||
-                p.networkType.toLowerCase().includes(modalSearch.toLowerCase());
-              return matchesCat && matchesSearch;
-            });
-
-            return (
-              <div className="max-h-[260px] overflow-y-auto pr-1 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                {filteredNets.map((plat) => {
-                  const isSelected = selectedPlatformSlug === plat.slug;
-                  const platFromApi = platforms.find((p) => p.slug === plat.slug);
-                  const isConfigured = Boolean(platFromApi?.isConfigured);
-
-                  return (
-                    <button
-                      type="button"
-                      key={plat.slug}
-                      onClick={() => setSelectedPlatformSlug(plat.slug)}
-                      className={`group p-3 rounded-2xl border-2 text-left flex flex-col justify-between gap-2 transition-all duration-200 cursor-pointer relative overflow-hidden ${
-                        isSelected
-                          ? 'border-indigo-600 dark:border-indigo-400 bg-indigo-50/95 dark:bg-indigo-950/70 shadow-lg shadow-indigo-500/15 ring-4 ring-indigo-500/20 scale-[1.02]'
-                          : 'border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/80 hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-md hover:-translate-y-0.5'
-                      }`}
-                    >
-                      {/* Brand Hover Accent Top Line */}
-                      <div
-                        className="absolute top-0 left-0 right-0 h-1 transition-opacity duration-300"
-                        style={{
-                          backgroundColor: plat.brandColor || '#6366F1',
-                          opacity: isSelected ? 1 : 0,
-                        }}
-                      />
-
-                      <div className="flex items-center justify-between w-full">
-                        <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xs group-hover:scale-110 transition-transform duration-200">
-                          <SocialPlatformIcon platform={plat.slug} size="sm" />
-                        </div>
-                        {isSelected ? (
-                          <div className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xs">
-                            <Check className="w-3 h-3 stroke-[3]" />
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <span
-                              className={`w-2 h-2 rounded-full ${
-                                isConfigured ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'
-                              }`}
-                              title={isConfigured ? 'Live API Configured' : 'Setup Required'}
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="min-w-0">
-                        <span className="block text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                          {plat.name}
-                        </span>
-                        <span className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                          {plat.tagline}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            );
-          })()}
-
-          {/* Active Platform Branded Integration Banner */}
+          {/* Active Platform Branded Integration Banner & Credentials Setup */}
           {(() => {
             const activeNet = CORE_ENTERPRISE_NETWORKS.find((p) => p.slug === selectedPlatformSlug) || CORE_ENTERPRISE_NETWORKS[0];
             const platFromApi = platforms.find((p) => p.slug === selectedPlatformSlug);
             const isConfigured = Boolean(platFromApi?.isConfigured);
+            const devPortal = PLATFORM_DEV_PORTALS[selectedPlatformSlug] || {
+              portalName: `${activeNet.name} Developer Portal`,
+              portalUrl: 'https://developers.facebook.com/apps/',
+              idLabel: 'Client ID / App Key',
+              idPlaceholder: 'Enter Client ID or App Key',
+              secretLabel: 'Client Secret / App Secret',
+              secretPlaceholder: 'Enter Client Secret',
+              instructions: `Register an official developer app on ${activeNet.name} and configure the OAuth Redirect URI below.`,
+            };
+
+            const origin = typeof window !== 'undefined' ? window.location.origin : 'https://socialflow-zeta-one.vercel.app';
+            const callbackUrl = `${origin}/api/social-accounts/callback/${activeNet.slug}`;
 
             return (
               <div className="space-y-4">
@@ -1469,71 +1801,165 @@ export default function SocialAccountsView() {
                 </div>
 
                 {/* Verified API Capabilities Checklist */}
-                <div className="p-3.5 rounded-xl bg-slate-100/70 dark:bg-slate-850/60 border border-slate-200 dark:border-slate-800 space-y-2">
-                  <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                <div className="p-3 rounded-xl bg-slate-100/70 dark:bg-slate-850/60 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                  <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                     {activeNet.name} Official API Capabilities:
                   </p>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                  <div className="grid grid-cols-2 gap-1.5 text-xs">
+                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 text-[11px]">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>Feed & Multi-Channel Publishing</span>
+                      <span>Feed &amp; Multi-Channel Publishing</span>
                     </div>
-                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 text-[11px]">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>Video / Media Assets ({activeNet.mediaLimit} items)</span>
+                      <span>Media Assets ({activeNet.mediaLimit} items)</span>
                     </div>
-                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 text-[11px]">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>Real-time Insights & Analytics</span>
+                      <span>Real-time Insights &amp; Analytics</span>
                     </div>
-                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 text-[11px]">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>OAuth Scopes & Token Refresh</span>
+                      <span>OAuth Scopes &amp; Token Refresh</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Primary Connection Action or Configuration Required Banner */}
-                {isConfigured ? (
-                  <div className="pt-2">
+                {/* Real Developer Credentials Setup Card OR Connect Button */}
+                {(!isConfigured || showCredsEditor) ? (
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/5 via-indigo-500/5 to-purple-500/5 border border-amber-500/30 space-y-3.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <KeyRound className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                        <h5 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">
+                          Configure Official {activeNet.name} Developer API
+                        </h5>
+                      </div>
+                      <a
+                        href={devPortal.portalUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                      >
+                        <span>{devPortal.portalName}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                      {devPortal.instructions}
+                    </p>
+
+                    {/* OAuth Redirect URI Copy Box */}
+                    <div className="p-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
+                      <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        <span>OAuth 2.0 Redirect / Callback URI</span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyCallback(activeNet.slug)}
+                          className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-bold cursor-pointer"
+                        >
+                          {copiedCallback ? (
+                            <>
+                              <Check className="w-3 h-3 text-emerald-500" />
+                              <span className="text-emerald-500">Copied!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3 h-3" />
+                              <span>Copy URI</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <p className="font-mono text-[11px] text-indigo-600 dark:text-indigo-400 break-all select-all">
+                        {callbackUrl}
+                      </p>
+                    </div>
+
+                    {/* Form Inputs: Client ID & Client Secret */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                          {devPortal.idLabel} <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={customClientId}
+                          onChange={(e) => setCustomClientId(e.target.value)}
+                          placeholder={devPortal.idPlaceholder}
+                          className="w-full px-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                            {devPortal.secretLabel}
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setShowSecret(!showSecret)}
+                            className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center gap-1 cursor-pointer"
+                          >
+                            {showSecret ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                            <span>{showSecret ? 'Hide' : 'Show'}</span>
+                          </button>
+                        </div>
+                        <input
+                          type={showSecret ? 'text' : 'password'}
+                          value={customClientSecret}
+                          onChange={(e) => setCustomClientSecret(e.target.value)}
+                          placeholder={devPortal.secretPlaceholder}
+                          className="w-full px-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <Button
+                        type="button"
+                        onClick={handleSaveCredsAndConnect}
+                        isLoading={isSavingCreds}
+                        className="flex-1 py-2.5 h-auto rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 gap-2 cursor-pointer"
+                      >
+                        <ShieldCheck className="w-4 h-4" />
+                        <span>Save Credentials &amp; Connect Now</span>
+                      </Button>
+                      {showCredsEditor && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowCredsEditor(false)}
+                          className="rounded-xl text-xs cursor-pointer"
+                        >
+                          Cancel
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2 pt-1">
                     <Button
                       type="submit"
                       isLoading={isConnecting}
                       className="w-full py-3 h-auto rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-bold text-sm text-white shadow-lg shadow-indigo-500/25 gap-2 cursor-pointer transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
                     >
                       <SocialPlatformIcon platform={activeNet.slug} size="sm" />
-                      <span>Authorize & Connect with {activeNet.name}</span>
+                      <span>Authorize &amp; Connect with {activeNet.name}</span>
                     </Button>
-                    <p className="text-[11px] text-center text-slate-400 dark:text-slate-500 mt-2">
-                      Redirects to official {activeNet.name} OAuth dialog to securely authorize requested scopes.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/25 space-y-3">
-                    <div className="flex items-center gap-2 text-xs font-bold text-amber-700 dark:text-amber-400">
-                      <AlertTriangle className="w-4 h-4 shrink-0" />
-                      <span>CONFIGURATION REQUIRED IN SERVER ENVIRONMENT</span>
-                    </div>
-                    <p className="text-xs text-amber-800/80 dark:text-amber-300/80 leading-relaxed">
-                      {activeNet.name} OAuth developer credentials (Client ID / Secret) are not yet configured in your server environment. Configure them in Admin Settings or .env to start connecting accounts.
-                    </p>
-                    <div className="flex items-center gap-3 pt-1">
-                      <Link
-                        href="/admin/settings/integrations"
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-sm transition-colors"
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 px-1">
+                      <span>Redirects to official {activeNet.name} OAuth dialog.</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowCredsEditor(true)}
+                        className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline cursor-pointer flex items-center gap-1"
                       >
-                        <span>Configure in Admin Settings</span>
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </Link>
-                      <Button
-                        type="submit"
-                        variant="outline"
-                        size="sm"
-                        isLoading={isConnecting}
-                        className="text-xs font-semibold rounded-lg"
-                      >
-                        Check Credentials
-                      </Button>
+                        <span>Update API Keys</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </button>
                     </div>
                   </div>
                 )}

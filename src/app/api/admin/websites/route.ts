@@ -208,7 +208,7 @@ export async function DELETE(req: NextRequest) {
       });
       await prisma.domain.updateMany({
         where: { websiteId: id },
-        data: { status: 'INACTIVE' },
+        data: { status: 'ARCHIVED' },
       });
     }
 

@@ -28,12 +28,27 @@ export async function GET() {
       recentPosts,
       recentWebsites,
     ] = await Promise.all([
-      // Websites
-      prisma.website.count({ where: workspaceId ? { workspaceId } : {} }),
-      prisma.website.count({ where: { status: 'ACTIVE', ...(workspaceId ? { workspaceId } : {}) } }),
+      // Websites (Exclude ARCHIVED)
+      prisma.website.count({
+        where: {
+          status: { not: 'ARCHIVED' },
+          ...(workspaceId ? { workspaceId } : {}),
+        },
+      }),
+      prisma.website.count({
+        where: {
+          status: 'ACTIVE',
+          ...(workspaceId ? { workspaceId } : {}),
+        },
+      }),
 
-      // Domains
-      prisma.domain.count({ where: workspaceId ? { workspaceId } : {} }),
+      // Domains (Exclude ARCHIVED)
+      prisma.domain.count({
+        where: {
+          status: { not: 'ARCHIVED' },
+          ...(workspaceId ? { workspaceId } : {}),
+        },
+      }),
 
       // Social Accounts
       prisma.socialAccount.count({ where: { isSoftDeleted: false, ...(workspaceId ? { workspaceId } : {}) } }),
@@ -47,8 +62,14 @@ export async function GET() {
       // Media Assets
       prisma.mediaAsset.count({ where: workspaceId ? { workspaceId } : {} }),
 
-      // Infrastructure Assets
-      prisma.infrastructureAsset.count({ where: workspaceId ? { workspaceId } : {} }),
+      // Infrastructure Assets (Exclude ARCHIVED)
+      prisma.infrastructureAsset.count({
+        where: {
+          isArchived: false,
+          status: { not: 'ARCHIVED' },
+          ...(workspaceId ? { workspaceId } : {}),
+        },
+      }),
 
       // Admins (Users with ACTIVE status)
       prisma.user.count({ where: { status: 'ACTIVE' } }),
@@ -71,10 +92,13 @@ export async function GET() {
         include: { author: { select: { name: true } }, targets: true },
       }),
 
-      // Recent Websites
+      // Recent Websites (Exclude ARCHIVED)
       prisma.website.findMany({
         take: 6,
-        where: workspaceId ? { workspaceId } : {},
+        where: {
+          status: { not: 'ARCHIVED' },
+          ...(workspaceId ? { workspaceId } : {}),
+        },
         orderBy: { createdAt: 'desc' },
         include: { domains: true },
       }),

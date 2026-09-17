@@ -28,7 +28,7 @@ function AdminLoginForm() {
   const urlError = searchParams.get('error');
 
   // Form state
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('itxsurajofficial@gmail.com');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -41,7 +41,7 @@ function AdminLoginForm() {
 
   // Forgot Password Modal state
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotEmail, setForgotEmail] = useState('itxsurajofficial@gmail.com');
   const [isForgotLoading, setIsForgotLoading] = useState(false);
   const [forgotSuccess, setForgotSuccess] = useState(false);
   const [resetToken, setResetToken] = useState<string | null>(null);
@@ -89,17 +89,19 @@ function AdminLoginForm() {
     e.preventDefault();
     setIsForgotLoading(true);
     try {
+      const targetEmail = (forgotEmail || email || 'itxsurajofficial@gmail.com').trim();
       const res = await fetch('/api/admin/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: forgotEmail || email }),
+        body: JSON.stringify({ email: targetEmail }),
       });
       const data = await res.json();
       setForgotSuccess(true);
-      if (data.devToken) {
-        setResetToken(data.devToken);
+      const token = data.recoveryToken || data.devToken || data.token;
+      if (token) {
+        setResetToken(token);
       }
-      showToast('Password recovery token generated', 'success');
+      showToast('Password recovery token generated successfully', 'success');
     } catch {
       showToast('Error requesting password recovery', 'error');
     } finally {
@@ -111,11 +113,11 @@ function AdminLoginForm() {
   const handleResetSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resetToken) {
-      showToast('Recovery token missing', 'error');
+      showToast('Recovery token is required', 'error');
       return;
     }
     if (newPassword.length < 8) {
-      showToast('Password must be at least 8 characters', 'error');
+      showToast('Password must be at least 8 characters with upper, lower, number, and special character', 'error');
       return;
     }
     if (newPassword !== confirmNewPassword) {
@@ -128,15 +130,17 @@ function AdminLoginForm() {
       const res = await fetch('/api/admin/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: resetToken, newPassword }),
+        body: JSON.stringify({ token: resetToken.trim(), newPassword }),
       });
       const data = await res.json();
       if (res.ok) {
-        showToast('Password updated successfully. You can now log in.', 'success');
+        showToast('Password updated! You can now sign in immediately.', 'success');
+        setEmail(forgotEmail || email || 'itxsurajofficial@gmail.com');
         setPassword(newPassword);
         setIsForgotModalOpen(false);
         setForgotSuccess(false);
         setResetToken(null);
+        setError(null);
       } else {
         showToast(data.error || 'Failed to reset password', 'error');
       }
@@ -211,10 +215,10 @@ function AdminLoginForm() {
                   setEmail(e.target.value);
                   if (error && urlError !== 'forbidden') setError(null);
                 }}
-                placeholder="admin@yourdomain.com"
+                placeholder="itxsurajofficial@gmail.com"
                 aria-invalid={!!error}
                 aria-describedby={error ? 'login-error-msg' : undefined}
-                className="block w-full pl-10 pr-3.5 py-2.5 text-sm bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
+                className="block w-full pl-10 pr-3.5 py-2.5 text-sm bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 transition-colors font-medium"
               />
             </div>
           </div>
@@ -242,10 +246,10 @@ function AdminLoginForm() {
                   setPassword(e.target.value);
                   if (error && urlError !== 'forbidden') setError(null);
                 }}
-                placeholder="Enter your administrator password"
+                placeholder="••••••••••••"
                 aria-invalid={!!error}
                 aria-describedby={error ? 'login-error-msg' : undefined}
-                className="block w-full pl-10 pr-11 py-2.5 text-sm bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
+                className="block w-full pl-10 pr-11 py-2.5 text-sm bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 transition-colors tracking-widest"
               />
               <button
                 type="button"
@@ -275,10 +279,10 @@ function AdminLoginForm() {
             <button
               type="button"
               onClick={() => {
-                setForgotEmail(email || '');
+                setForgotEmail(email || 'itxsurajofficial@gmail.com');
                 setIsForgotModalOpen(true);
               }}
-              className="text-slate-400 hover:text-indigo-400 transition-colors cursor-pointer"
+              className="text-xs font-medium text-slate-400 hover:text-indigo-400 transition-colors cursor-pointer underline-offset-4 hover:underline"
             >
               Forgot password?
             </button>
@@ -298,8 +302,8 @@ function AdminLoginForm() {
       </div>
 
       {/* Footer */}
-      <p className="text-center text-xs text-slate-500 mt-6">
-        Protected by SocialFlow Enterprise Security
+      <p className="text-center text-xs text-slate-500 mt-6 flex items-center justify-center gap-1.5 font-medium">
+        <span>Protected by SocialFlow Enterprise Security</span>
       </p>
 
       {/* Forgot Password Modal */}

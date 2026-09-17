@@ -23,11 +23,18 @@ export async function POST(
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
+    // Avoid infinite (Copy) (Copy) stacking
+    let cleanTitle = post.title;
+    if (cleanTitle) {
+      const stripped = cleanTitle.replace(/(\s*\((Copy(\s*\d+)?)\))+$/i, '').trim();
+      cleanTitle = `${stripped} (Copy)`;
+    }
+
     const duplicated = await prisma.post.create({
       data: {
         workspaceId: post.workspaceId,
         authorId: auth.user.id,
-        title: post.title ? `${post.title} (Copy)` : null,
+        title: cleanTitle,
         globalContent: post.globalContent,
         mediaUrlsJson: post.mediaUrlsJson,
         status: 'DRAFT',

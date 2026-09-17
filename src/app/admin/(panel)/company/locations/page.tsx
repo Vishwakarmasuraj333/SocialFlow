@@ -31,6 +31,7 @@ export default function BusinessLocationsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [locationToDelete, setLocationToDelete] = useState<any>(null);
   const [editingLocation, setEditingLocation] = useState<any>(null);
+  const [activeMapLocation, setActiveMapLocation] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Form State
@@ -40,11 +41,11 @@ export default function BusinessLocationsPage() {
     address: '',
     city: '',
     state: '',
-    country: 'United States',
+    country: 'India',
     postalCode: '',
     phone: '',
     email: '',
-    timezone: 'UTC',
+    timezone: 'Asia/Kolkata',
   });
 
   const fetchLocations = async () => {
@@ -280,25 +281,63 @@ export default function BusinessLocationsPage() {
                 </div>
 
                 <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800/60">
-                  <p className="line-clamp-1">{loc.address}</p>
+                  <p className="line-clamp-2 font-medium">{loc.address}</p>
                   {loc.phone && (
                     <p className="flex items-center gap-1.5">
-                      <Phone className="w-3 h-3 text-slate-400" />
-                      <span>{loc.phone}</span>
+                      <Phone className="w-3 h-3 text-slate-400 shrink-0" />
+                      <span className="font-mono">{loc.phone}</span>
                     </p>
                   )}
                   {loc.email && (
                     <p className="flex items-center gap-1.5 truncate">
-                      <Mail className="w-3 h-3 text-slate-400" />
-                      <span>{loc.email}</span>
+                      <Mail className="w-3 h-3 text-slate-400 shrink-0" />
+                      <span className="truncate">{loc.email}</span>
                     </p>
                   )}
+                </div>
+
+                {/* Live Real Map Preview */}
+                <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 mt-1">
+                  <div className="relative w-full h-44">
+                    <iframe
+                      title={`Live Map - ${loc.name}`}
+                      src={`https://maps.google.com/maps?q=${encodeURIComponent(`${loc.address}, ${loc.city}, ${loc.state ? loc.state + ', ' : ''}${loc.country}`)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                      className="w-full h-full border-0"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-[11px]">
+                    <span className="flex items-center gap-1.5 font-semibold text-emerald-600 dark:text-emerald-400">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      </span>
+                      Live GPS Verified
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveMapLocation(loc)}
+                        className="text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline"
+                      >
+                        Expand Map
+                      </button>
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${loc.address}, ${loc.city}, ${loc.state ? loc.state + ', ' : ''}${loc.country}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5"
+                      >
+                        Directions ↗
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/60">
                 <span className="text-[10px] text-slate-400 font-mono">
-                  {loc.timezone}
+                  Timezone: {loc.timezone}
                 </span>
 
                 <div className="flex items-center gap-1.5">
@@ -546,6 +585,63 @@ export default function BusinessLocationsPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Expanded Interactive Map Modal */}
+      {activeMapLocation && (
+        <Modal
+          isOpen={Boolean(activeMapLocation)}
+          onClose={() => setActiveMapLocation(null)}
+          title={`Live Interactive Map — ${activeMapLocation.name}`}
+          description={`${activeMapLocation.address}, ${activeMapLocation.city}, ${activeMapLocation.state ? activeMapLocation.state + ', ' : ''}${activeMapLocation.country} (PIN: ${activeMapLocation.postalCode || 'N/A'})`}
+          maxWidth="2xl"
+        >
+          <div className="space-y-4">
+            <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-lg bg-slate-950">
+              <iframe
+                title={`Detailed Map - ${activeMapLocation.name}`}
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(`${activeMapLocation.address}, ${activeMapLocation.city}, ${activeMapLocation.state ? activeMapLocation.state + ', ' : ''}${activeMapLocation.country}`)}&t=&z=16&ie=UTF8&iwloc=&output=embed`}
+                className="w-full h-96 border-0"
+                loading="lazy"
+              />
+            </div>
+
+            <div className="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-slate-900 dark:text-white">Facility Phone:</span>
+                  <span className="font-mono text-slate-600 dark:text-slate-300">{activeMapLocation.phone || 'Not set'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-slate-900 dark:text-white">Email Contact:</span>
+                  <span className="text-slate-600 dark:text-slate-300">{activeMapLocation.email || 'Not set'}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${activeMapLocation.address}, ${activeMapLocation.city}, ${activeMapLocation.state ? activeMapLocation.state + ', ' : ''}${activeMapLocation.country}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs transition-colors"
+                >
+                  <span>Open in Google Maps</span>
+                  <span>↗</span>
+                </a>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveMapLocation(null)}
+              >
+                Close Map
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

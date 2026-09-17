@@ -214,24 +214,24 @@ export default function PostsView() {
     }
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = async (permanent: boolean = false) => {
     if (selectedPostIds.length === 0) return;
     setIsBulkActionLoading(true);
     try {
       const res = await fetch('/api/admin/posts', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: selectedPostIds }),
+        body: JSON.stringify({ ids: selectedPostIds, permanent }),
       });
       const data = await res.json();
       if (res.ok) {
-        showToast(`Successfully deleted ${data.count || selectedPostIds.length} posts to trash.`, 'success');
+        showToast(data.message || `Successfully processed ${selectedPostIds.length} posts.`, 'success');
       } else {
         // Fallback to individual deletions
         for (const id of selectedPostIds) {
-          await fetch(`/api/admin/posts/${id}`, { method: 'DELETE' });
+          await fetch(`/api/admin/posts/${id}?permanent=${permanent}`, { method: 'DELETE' });
         }
-        showToast(`Deleted ${selectedPostIds.length} posts to trash.`, 'success');
+        showToast(`Processed ${selectedPostIds.length} posts.`, 'success');
       }
       setSelectedPostIds([]);
       setIsBulkDeleteModalOpen(false);
@@ -830,27 +830,65 @@ export default function PostsView() {
       {isBulkDeleteModalOpen && (
         <Modal
           isOpen={isBulkDeleteModalOpen}
-          onClose={() => setIsBulkDeleteModalOpen(false)}
-          title={`Delete ${selectedPostIds.length} Selected Posts?`}
-          description="Confirm batch post deletion. These posts will be moved to internal Trash."
-          maxWidth="sm"
+          onClose={() => !isBulkActionLoading && setIsBulkDeleteModalOpen(false)}
+          title={`Delete ${selectedPostIds.length} Selected Posts`}
+          description="Choose whether to archive posts or permanently remove them from the database."
+          maxWidth="md"
         >
-          <div className="space-y-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Are you sure you want to delete these <span className="font-bold text-slate-900 dark:text-white">{selectedPostIds.length} selected publications</span>? They will be removed from your active feed and archived in trash.
-            </p>
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setIsBulkDeleteModalOpen(false)} disabled={isBulkActionLoading}>
-                Cancel
-              </Button>
+          <div className="space-y-4 text-xs">
+            <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-xl text-amber-800 dark:text-amber-200">
+              <p className="font-semibold mb-1">Batch Post Deletion</p>
+              <p className="text-[11px] leading-relaxed">
+                You have selected <strong>{selectedPostIds.length}</strong> post(s). Choose whether to move them to trash or permanently purge them.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 space-y-2">
+                <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
+                  Move to Trash
+                </span>
+                <p className="text-[11px] text-slate-500">
+                  Archive all {selectedPostIds.length} posts. Recoverable anytime from Trash.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  isLoading={isBulkActionLoading}
+                  onClick={() => handleBulkDelete(false)}
+                  className="w-full text-xs font-semibold rounded-lg"
+                >
+                  Move to Trash ({selectedPostIds.length})
+                </Button>
+              </div>
+
+              <div className="p-3.5 rounded-xl border border-rose-300 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/20 space-y-2">
+                <span className="text-xs font-bold text-rose-600 dark:text-rose-400">
+                  Real Delete (Permanent)
+                </span>
+                <p className="text-[11px] text-rose-700/80 dark:text-rose-300/80">
+                  Permanently purge {selectedPostIds.length} posts and targets forever.
+                </p>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  isLoading={isBulkActionLoading}
+                  onClick={() => handleBulkDelete(true)}
+                  className="w-full text-xs font-bold rounded-lg"
+                >
+                  Delete Forever ({selectedPostIds.length})
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
               <Button
-                variant="destructive"
-                onClick={handleBulkDelete}
-                isLoading={isBulkActionLoading}
-                className="font-bold gap-1.5"
+                variant="ghost"
+                size="sm"
+                disabled={isBulkActionLoading}
+                onClick={() => setIsBulkDeleteModalOpen(false)}
               >
-                <Trash2 className="h-3.5 w-3.5" />
-                Delete All Selected ({selectedPostIds.length})
+                Cancel
               </Button>
             </div>
           </div>

@@ -35,36 +35,43 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Ensure uploads directory exists in public/uploads/avatars
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'avatars');
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-
     const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
     const filename = `admin-${auth.user.id.slice(-8)}-${Date.now()}.${ext}`;
-    const filePath = path.join(uploadsDir, filename);
-
     const buffer = Buffer.from(await file.arrayBuffer());
-    await fs.promises.writeFile(filePath, buffer);
 
-    const avatarUrl = `/uploads/avatars/${filename}`;
+    let avatarUrl: string;
 
-    // Remove previous uploaded file if it was a local upload
-    const currentUser = await prisma.user.findUnique({
-      where: { id: auth.user.id },
-      select: { avatarUrl: true },
-    });
+    // In serverless / Vercel environments, the filesystem (/var/task) is read-only (EROFS).
+    // Attempt local storage first; if read-only, seamlessly persist as an optimized Base64 Data URI.
+    try {
+      const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'avatars');
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      const filePath = path.join(uploadsDir, filename);
+      await fs.promises.writeFile(filePath, buffer);
+      avatarUrl = `/uploads/avatars/${filename}`;
 
-    if (currentUser?.avatarUrl?.startsWith('/uploads/avatars/')) {
-      const oldPath = path.join(process.cwd(), 'public', currentUser.avatarUrl);
-      if (fs.existsSync(oldPath) && oldPath !== filePath) {
-        try {
-          await fs.promises.unlink(oldPath);
-        } catch {
-          // ignore cleanup errors
+      // Remove previous uploaded file if it was a local file
+      const currentUser = await prisma.user.findUnique({
+        where: { id: auth.user.id },
+        select: { avatarUrl: true },
+      });
+
+      if (currentUser?.avatarUrl?.startsWith('/uploads/avatars/')) {
+        const oldPath = path.join(process.cwd(), 'public', currentUser.avatarUrl);
+        if (fs.existsSync(oldPath) && oldPath !== filePath) {
+          try {
+            await fs.promises.unlink(oldPath);
+          } catch {
+            // ignore cleanup errors
+          }
         }
       }
+    } catch (fsErr: any) {
+      // Graceful fallback for Vercel / serverless read-only filesystems (EROFS)
+      const base64Data = buffer.toString('base64');
+      avatarUrl = `data:${file.type};base64,${base64Data}`;
     }
 
     // Persist real avatarUrl in Prisma database
