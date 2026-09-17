@@ -193,14 +193,21 @@ export default function PublisherView() {
       return;
     }
 
+    const selectedAccountObjects = accounts.filter((a) => selectedAccountIds.includes(a.id));
+    const requiresMediaTarget = selectedAccountObjects.find(
+      (a) => PLATFORMS_CONFIG[a.platform.toUpperCase()]?.requiresMedia
+    );
+    if (requiresMediaTarget && mediaUrls.length === 0) {
+      showToast(`${requiresMediaTarget.platform} requires an image or video for posting. Please attach media below.`, 'warning');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       let scheduledAtISO: string | null = null;
       if (isScheduled && scheduledDate && scheduledTime) {
         scheduledAtISO = new Date(`${scheduledDate}T${scheduledTime}:00`).toISOString();
       }
-
-      const selectedAccountObjects = accounts.filter((a) => selectedAccountIds.includes(a.id));
 
       const payload = {
         title: title.trim() || undefined,
@@ -440,6 +447,40 @@ export default function PublisherView() {
                   <Plus className="w-3.5 h-3.5" />
                   <span>Attach</span>
                 </Button>
+              </div>
+
+              {/* Quick Preset Buttons */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Quick Presets:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const sampleImages = [
+                      'https://images.unsplash.com/photo-1544717305-2782549b5136?w=1200&auto=format&fit=crop&q=80',
+                      'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&auto=format&fit=crop&q=80',
+                      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80'
+                    ];
+                    const chosen = sampleImages[mediaUrls.length % sampleImages.length];
+                    setMediaUrls([...mediaUrls, chosen]);
+                    showToast('High-resolution 4K image attached', 'success');
+                  }}
+                  className="text-[11px] px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-semibold hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors"
+                >
+                  📸 Add 4K Image
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const videoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+                    if (!mediaUrls.includes(videoUrl)) {
+                      setMediaUrls([...mediaUrls, videoUrl]);
+                      showToast('HD video asset attached', 'success');
+                    }
+                  }}
+                  className="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors"
+                >
+                  🎬 Add HD Video
+                </button>
               </div>
 
               {mediaUrls.length > 0 && (

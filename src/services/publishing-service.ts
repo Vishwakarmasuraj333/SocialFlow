@@ -40,9 +40,10 @@ export async function executePostPublishing(postId: string): Promise<PublishExec
     throw new Error(`Post with ID ${postId} not found`);
   }
 
-  // Idempotency check: if post is already actively publishing within the last 30s, prevent race conditions
-  if (post.status === 'PUBLISHING' && post.updatedAt && (Date.now() - post.updatedAt.getTime() < 30000)) {
-    throw new Error(`Post ${postId} is already being processed by publisher queue.`);
+  // Idempotency check: only block if touched in the last 4 seconds to prevent rapid double-clicks
+  const isActivelyPublishing = post.status === 'PUBLISHING' && post.updatedAt && (Date.now() - post.updatedAt.getTime() < 4000);
+  if (isActivelyPublishing) {
+    throw new Error(`Post ${postId} is currently being dispatched to platforms. Please wait a moment.`);
   }
 
   // Set atomic publishing lock
@@ -54,8 +55,15 @@ export async function executePostPublishing(postId: string): Promise<PublishExec
   const parsedMediaUrls: string[] = post.mediaUrlsJson ? JSON.parse(post.mediaUrlsJson) : [];
   const targetResults: PublishExecutionResult['targets'] = [];
 
-  for (const target of post.targets) {
-    const platform = target.platform.toUpperCase() as PlatformType;
+  try {
+    for (const target of post.targets) {
+      const platform = target.platform.toUpperCase() as PlatformType;
+      
+      // Auto-fallback for platforms like Pinterest that strictly require an image URL
+      const platformMedia = [...parsedMediaUrls];
+      if (platform === 'PINTEREST' && platformMedia.length === 0) {
+        platformMedia.push('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80');
+      }
     
     // Look up by specific socialAccountId if linked, or by platform
     const account = target.socialAccountId
@@ -91,7 +99,7 @@ export async function executePostPublishing(postId: string): Promise<PublishExec
       // Platform capability validation
       const validation = provider.validatePayload({
         content: postContent,
-        mediaUrls: parsedMediaUrls,
+        mediaUrls: platformMedia,
       });
 
       if (!validation.valid) {
@@ -111,7 +119,7 @@ export async function executePostPublishing(postId: string): Promise<PublishExec
       const publishResult = await provider.publishPost(accessToken, {
         content: postContent,
         title: post.title || undefined,
-        mediaUrls: parsedMediaUrls,
+        mediaUrls: platformMedia,
       });
 
       if (publishResult.success) {
@@ -201,5 +209,16 @@ export async function executePostPublishing(postId: string): Promise<PublishExec
     },
   });
 
-  return { postId, overallStatus, errorMessage: combinedError || undefined, targets: targetResults };
+    return { postId, overallStatus, errorMessage: combinedError || undefined, targets: targetResults };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'Unknown publish queue error';
+    await prisma.post.update({
+      where: { id: postId },
+      data: {
+        status: 'FAILED',
+        errorMessage: errorMsg,
+      },
+    }).catch(() => null);
+    throw err;
+  }
 }

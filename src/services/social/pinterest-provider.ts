@@ -144,7 +144,16 @@ export class PinterestProvider extends SocialProvider {
         }),
       });
 
-      if (!res.ok) return { success: false, errorMessage: `Pinterest Pin error: ${await res.text()}` };
+      if (!res.ok) {
+        const errBody = await res.text();
+        if (errBody.includes('consumer type is not supported')) {
+          return {
+            success: false,
+            errorMessage: 'Pinterest API: Trial access approval is pending on Pinterest Developer Portal.',
+          };
+        }
+        return { success: false, errorMessage: `Pinterest Pin error: ${errBody}` };
+      }
       const data = await res.json();
       return {
         success: true,

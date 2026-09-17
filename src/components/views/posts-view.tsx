@@ -25,6 +25,7 @@ import {
   XCircle,
   Clock,
   Ban,
+  Play,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -353,14 +354,31 @@ export default function PostsView() {
                     </button>
 
                     {mediaList.length > 0 && (
-                      <img
-                        src={mediaList[0]}
-                        alt="Media"
-                        className="h-16 w-16 rounded-xl object-cover border border-slate-200 dark:border-slate-800 shrink-0 hidden sm:block shadow-xs"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
+                      <div
+                        onClick={() => setSelectedPostDetails(post)}
+                        className="relative h-16 w-16 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 shrink-0 cursor-pointer shadow-xs group/media bg-slate-900"
+                        title="Click to view media"
+                      >
+                        {mediaList[0].endsWith('.mp4') || mediaList[0].endsWith('.webm') || mediaList[0].includes('video') ? (
+                          <div className="w-full h-full flex items-center justify-center bg-slate-950">
+                            <Play className="w-5 h-5 text-white fill-white group-hover/media:scale-110 transition-transform" />
+                          </div>
+                        ) : (
+                          <img
+                            src={mediaList[0]}
+                            alt="Media"
+                            className="w-full h-full object-cover group-hover/media:scale-105 transition-transform"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        )}
+                        {mediaList.length > 1 && (
+                          <span className="absolute bottom-1 right-1 bg-black/75 text-[9px] font-bold text-white px-1 py-0.5 rounded shadow">
+                            +{mediaList.length - 1}
+                          </span>
+                        )}
+                      </div>
                     )}
 
                     <div className="space-y-1.5 flex-1 min-w-0">
@@ -381,15 +399,20 @@ export default function PostsView() {
                         </Badge>
 
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          {post.targets?.map((t: any) => (
-                            <span
-                              key={t.id}
-                              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 font-semibold"
-                            >
-                              <SocialPlatformIcon platform={t.platform.toLowerCase()} size="xs" />
-                              <span>{t.platform}</span>
-                            </span>
-                          ))}
+                          {post.targets?.map((t: any) => {
+                            const handle = t.socialAccount?.accountHandle;
+                            return (
+                              <span
+                                key={t.id}
+                                className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 font-semibold"
+                                title={handle || t.platform}
+                              >
+                                <SocialPlatformIcon platform={t.platform.toLowerCase()} size="xs" />
+                                <span>{t.platform}</span>
+                                {handle && <span className="opacity-70 font-mono text-[9px]">({handle})</span>}
+                              </span>
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -410,7 +433,7 @@ export default function PostsView() {
                       )}
 
                       <div className="flex items-center gap-4 text-[11px] text-slate-500 dark:text-slate-400">
-                        <span>Author: <b className="text-slate-800 dark:text-slate-200">{post.author?.name || 'Admin'}</b></span>
+                        <span>Author: <b className="text-slate-800 dark:text-slate-200">{post.author?.name || 'Suraj Vishwakarma'}</b></span>
                         {post.scheduledAt && (
                           <span>Scheduled: <b>{new Date(post.scheduledAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</b></span>
                         )}
@@ -445,18 +468,40 @@ export default function PostsView() {
                     )}
 
                     {isScheduled && (
+                      <>
+                        <Button
+                          size="sm"
+                          onClick={() => handlePublishNow(post.id)}
+                          className="h-8 px-2.5 text-xs rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold"
+                          title="Publish Now Immediately"
+                        >
+                          <Send className="h-3 w-3 mr-1" /> Publish Now
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleCancelSchedule(post.id)}
+                          className="h-8 px-2.5 text-xs rounded-xl border-amber-300 text-amber-600 hover:bg-amber-50"
+                          title="Cancel Schedule"
+                        >
+                          <Ban className="h-3.5 w-3.5 mr-1" /> Cancel
+                        </Button>
+                      </>
+                    )}
+
+                    {post.status === 'PUBLISHING' && (
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => handleCancelSchedule(post.id)}
                         className="h-8 px-2.5 text-xs rounded-xl border-amber-300 text-amber-600 hover:bg-amber-50"
-                        title="Cancel Schedule"
+                        title="Reset stuck status"
                       >
-                        <Ban className="h-3.5 w-3.5 mr-1" /> Cancel
+                        <RefreshCw className="h-3.5 w-3.5 mr-1 animate-spin" /> Reset
                       </Button>
                     )}
 
-                    {!isPublished && !isScheduled && !isFailed && (
+                    {!isPublished && !isScheduled && !isFailed && post.status !== 'PUBLISHING' && (
                       <Button
                         size="sm"
                         onClick={() => handlePublishNow(post.id)}
@@ -528,15 +573,39 @@ export default function PostsView() {
               </p>
 
               {selectedPostDetails.mediaUrlsJson && (
-                <div className="flex gap-2 pt-1 overflow-x-auto">
-                  {JSON.parse(selectedPostDetails.mediaUrlsJson).map((url: string, i: number) => (
-                    <img
-                      key={i}
-                      src={url}
-                      alt="Attachment"
-                      className="h-16 w-16 rounded-lg object-cover border border-slate-200 dark:border-slate-800"
-                    />
-                  ))}
+                <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-500 uppercase text-[10px]">
+                      Attached Media Assets ({JSON.parse(selectedPostDetails.mediaUrlsJson).length})
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {JSON.parse(selectedPostDetails.mediaUrlsJson).map((url: string, i: number) => {
+                      const isVideo = url.endsWith('.mp4') || url.endsWith('.webm') || url.includes('video');
+                      return isVideo ? (
+                        <div key={i} className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-black aspect-video flex flex-col justify-center">
+                          <video src={url} controls className="w-full h-full object-contain" />
+                        </div>
+                      ) : (
+                        <div key={i} className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-900 aspect-video shadow-xs">
+                          <img
+                            src={url}
+                            alt="Attachment"
+                            className="w-full h-full object-cover"
+                          />
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/70 text-white hover:bg-indigo-600 transition-colors"
+                            title="Open full resolution in new tab"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
