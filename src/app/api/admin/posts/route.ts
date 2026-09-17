@@ -166,3 +166,54 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message || 'Failed to create post' }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const auth = await getAuthContext();
+    if (!auth || !auth.user) {
+      return NextResponse.json({ error: 'Unauthorized: Admin authentication required' }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { ids } = body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json({ error: 'Valid post IDs array is required' }, { status: 400 });
+    }
+
+    const where: any = {
+      id: { in: ids },
+    };
+
+    if (auth.workspace && !auth.user.isSuperAdmin) {
+      where.workspaceId = auth.workspace.id;
+    }
+
+    const updated = await prisma.post.updateMany({
+      where,
+      data: {
+        isSoftDeleted: true,
+        deletedAt: new Date(),
+      },
+    });
+
+    await logAuditEvent({
+      workspaceId: auth.workspace?.id || 'system',
+      userId: auth.user.id,
+      action: 'POSTS_BULK_DELETED',
+      entityType: 'Post',
+      entityId: 'bulk',
+      metadata: { deletedCount: updated.count, postIds: ids },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `Successfully deleted ${updated.count} posts to trash.`,
+      count: updated.count,
+    });
+  } catch (error: any) {
+    console.error('Error in bulk delete posts:', error);
+    return NextResponse.json({ error: error.message || 'Failed to bulk delete posts' }, { status: 500 });
+  }
+}
+

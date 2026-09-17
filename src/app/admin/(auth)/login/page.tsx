@@ -211,7 +211,7 @@ function AdminLoginForm() {
                   setEmail(e.target.value);
                   if (error && urlError !== 'forbidden') setError(null);
                 }}
-                placeholder="admin@socialflow.io"
+                placeholder="admin@yourdomain.com"
                 aria-invalid={!!error}
                 aria-describedby={error ? 'login-error-msg' : undefined}
                 className="block w-full pl-10 pr-3.5 py-2.5 text-sm bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
@@ -242,7 +242,7 @@ function AdminLoginForm() {
                   setPassword(e.target.value);
                   if (error && urlError !== 'forbidden') setError(null);
                 }}
-                placeholder="••••••••••••"
+                placeholder="Enter your administrator password"
                 aria-invalid={!!error}
                 aria-describedby={error ? 'login-error-msg' : undefined}
                 className="block w-full pl-10 pr-11 py-2.5 text-sm bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
@@ -269,13 +269,13 @@ function AdminLoginForm() {
                 disabled={isLoading}
                 className="w-3.5 h-3.5 rounded border-slate-700 bg-slate-950 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 cursor-pointer disabled:opacity-50"
               />
-              <span>Remember me</span>
+              <span>Remember this device</span>
             </label>
 
             <button
               type="button"
               onClick={() => {
-                setForgotEmail(email || 'admin@socialflow.io');
+                setForgotEmail(email || '');
                 setIsForgotModalOpen(true);
               }}
               className="text-slate-400 hover:text-indigo-400 transition-colors cursor-pointer"

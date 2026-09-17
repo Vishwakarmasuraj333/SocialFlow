@@ -2,10 +2,13 @@ import {
   PlatformType,
   ProviderCapabilities,
   TokenExchangeResult,
+  TokenRefreshResult,
   PublishPostPayload,
   PublishResult,
   SocialCommentItem,
+  CommentReplyResult,
   SocialAnalyticsData,
+  AccountProfileResult,
 } from './types';
 
 export abstract class SocialProvider {
@@ -13,51 +16,157 @@ export abstract class SocialProvider {
   abstract readonly capabilities: ProviderCapabilities;
 
   /**
-   * Generates the official OAuth authorization URL with state for CSRF protection
+   * Generates official OAuth 2.0 authorization URL
    */
-  abstract getAuthorizationUrl(state: string, redirectUri: string): string;
+  abstract getAuthorizationUrl(state: string, redirectUri: string, codeChallenge?: string): string;
 
   /**
-   * Exchanges an authorization code for access & refresh tokens and user profile
+   * Exchanges authorization code for tokens and verified account details
    */
-  abstract exchangeCodeForToken(code: string, redirectUri: string): Promise<TokenExchangeResult>;
+  abstract handleCallback(code: string, redirectUri: string, codeVerifier?: string): Promise<TokenExchangeResult>;
 
   /**
-   * Refreshes an expired access token if supported by the platform
+   * Backwards compatibility alias
    */
-  abstract refreshToken(refreshToken: string): Promise<{
-    accessToken: string;
-    refreshToken?: string;
-    expiresInSeconds?: number;
-  }>;
+  async exchangeCodeForToken(code: string, redirectUri: string): Promise<TokenExchangeResult> {
+    return this.handleCallback(code, redirectUri);
+  }
 
   /**
-   * Dispatches a post to the platform via its official REST API
+   * Refreshes access token if supported
+   */
+  async refreshToken(refreshToken: string): Promise<TokenRefreshResult> {
+    if (!this.capabilities.hasOAuth) {
+      throw new Error(`[UNSUPPORTED] ${this.capabilities.displayName} does not support OAuth token refresh.`);
+    }
+    throw new Error(`[UNSUPPORTED] Token refresh not implemented or supported for ${this.capabilities.displayName}.`);
+  }
+
+  /**
+   * Fetches authentic authorized account
+   */
+  async getAccount(accessToken: string, accountId?: string): Promise<AccountProfileResult> {
+    return this.getProfile(accessToken);
+  }
+
+  /**
+   * Fetches authorized user profile
+   */
+  abstract getProfile(accessToken: string): Promise<AccountProfileResult>;
+
+  /**
+   * Fetches real follower count
+   */
+  async getFollowers(accessToken: string, accountId: string): Promise<{ followers: number | null }> {
+    if (!this.capabilities.supportsFollowers) {
+      return { followers: null };
+    }
+    const profile = await this.getProfile(accessToken);
+    return { followers: profile.followers ?? null };
+  }
+
+  /**
+   * Fetches real following count
+   */
+  async getFollowing(accessToken: string, accountId: string): Promise<{ following: number | null }> {
+    if (!this.capabilities.supportsFollowing) {
+      return { following: null };
+    }
+    const profile = await this.getProfile(accessToken);
+    return { following: profile.following ?? null };
+  }
+
+  /**
+   * Fetches posts from the platform
+   */
+  async getPosts(accessToken: string, accountId: string): Promise<any[]> {
+    if (!this.capabilities.supportsPublishing) {
+      throw new Error(`[UNSUPPORTED] Fetching posts is not supported by ${this.capabilities.displayName} API.`);
+    }
+    return [];
+  }
+
+  /**
+   * Creates a post on the platform
+   */
+  async createPost(accessToken: string, payload: PublishPostPayload): Promise<PublishResult> {
+    return this.publishPost(accessToken, payload);
+  }
+
+  /**
+   * Updates an existing post if supported
+   */
+  async updatePost(accessToken: string, platformPostId: string, payload: PublishPostPayload): Promise<PublishResult> {
+    throw new Error(`[UNSUPPORTED] Editing posts is not supported through the official ${this.capabilities.displayName} API.`);
+  }
+
+  /**
+   * Deletes a published post if supported
+   */
+  async deletePost(accessToken: string, platformPostId: string): Promise<{ success: boolean; errorMessage?: string }> {
+    throw new Error(`[UNSUPPORTED] Deleting posts via API is not supported by ${this.capabilities.displayName}.`);
+  }
+
+  /**
+   * Dispatches a post via official platform REST API
    */
   abstract publishPost(accessToken: string, payload: PublishPostPayload): Promise<PublishResult>;
 
   /**
-   * Fetches latest comments/interactions on a published post
+   * Uploads media asset to platform
    */
-  abstract getComments(accessToken: string, platformPostId: string): Promise<SocialCommentItem[]>;
+  async uploadMedia(accessToken: string, mediaUrl: string, mediaType: 'image' | 'video'): Promise<{ mediaId: string }> {
+    throw new Error(`[UNSUPPORTED] Direct media upload not supported by ${this.capabilities.displayName}.`);
+  }
 
   /**
-   * Replies to a comment on the platform
+   * Fetches latest comments on a published post
    */
-  abstract replyToComment(
-    accessToken: string,
-    platformCommentId: string,
-    message: string
-  ): Promise<{ success: boolean; replyId?: string; errorMessage?: string }>;
+  async getComments(accessToken: string, platformPostId: string): Promise<SocialCommentItem[]> {
+    if (!this.capabilities.supportsComments) {
+      return [];
+    }
+    return [];
+  }
 
   /**
-   * Fetches latest aggregated analytics / insights from the platform API
+   * Replies to a comment
+   */
+  async replyToComment(accessToken: string, platformCommentId: string, message: string): Promise<CommentReplyResult> {
+    if (!this.capabilities.supportsComments) {
+      return {
+        success: false,
+        errorMessage: `[UNSUPPORTED] Replying to comments is not available through the official API for ${this.capabilities.displayName}.`,
+      };
+    }
+    return {
+      success: false,
+      errorMessage: `Replying to comments is not configured for ${this.capabilities.displayName}.`,
+    };
+  }
+
+  /**
+   * Fetches aggregated analytics from official platform API
    */
   abstract getAnalytics(
     accessToken: string,
     platformAccountId: string,
     timeframeDays: number
   ): Promise<SocialAnalyticsData>;
+
+  /**
+   * Revokes token / disconnects
+   */
+  async disconnect(accessToken: string): Promise<{ success: boolean }> {
+    return { success: true };
+  }
+
+  /**
+   * Returns provider capabilities
+   */
+  getCapabilities(): ProviderCapabilities {
+    return this.capabilities;
+  }
 
   /**
    * Validates post content against platform capability constraints

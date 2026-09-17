@@ -40,7 +40,7 @@ export async function POST(
       const analytics = await provider.getAnalytics(accessToken, account.platformAccountId, 30);
 
       // If provider returns data, store snapshot
-      if (analytics.followers > 0 || analytics.reach > 0) {
+      if ((analytics.followers ?? 0) > 0 || (analytics.reach ?? 0) > 0) {
         await prisma.analyticsSnapshot.upsert({
           where: {
             socialAccountId_date: {
@@ -53,28 +53,28 @@ export async function POST(
             socialAccountId: account.id,
             platform: account.platform,
             date: new Date(new Date().setHours(0, 0, 0, 0)),
-            followers: analytics.followers,
-            reach: analytics.reach,
-            impressions: analytics.impressions,
-            likes: analytics.likes,
-            comments: analytics.comments,
-            shares: analytics.shares,
-            saves: analytics.saves,
-            clicks: analytics.clicks,
-            videoViews: analytics.videoViews,
-            engagementRate: analytics.engagementRate,
+            followers: analytics.followers ?? 0,
+            reach: analytics.reach ?? 0,
+            impressions: analytics.impressions ?? 0,
+            likes: analytics.likes ?? 0,
+            comments: analytics.comments ?? 0,
+            shares: analytics.shares ?? 0,
+            saves: analytics.saves ?? 0,
+            clicks: analytics.clicks ?? 0,
+            videoViews: analytics.videoViews ?? 0,
+            engagementRate: analytics.engagementRate ?? 0,
           },
           update: {
-            followers: analytics.followers,
-            reach: analytics.reach,
-            impressions: analytics.impressions,
-            likes: analytics.likes,
-            comments: analytics.comments,
-            shares: analytics.shares,
-            saves: analytics.saves,
-            clicks: analytics.clicks,
-            videoViews: analytics.videoViews,
-            engagementRate: analytics.engagementRate,
+            followers: analytics.followers ?? 0,
+            reach: analytics.reach ?? 0,
+            impressions: analytics.impressions ?? 0,
+            likes: analytics.likes ?? 0,
+            comments: analytics.comments ?? 0,
+            shares: analytics.shares ?? 0,
+            saves: analytics.saves ?? 0,
+            clicks: analytics.clicks ?? 0,
+            videoViews: analytics.videoViews ?? 0,
+            engagementRate: analytics.engagementRate ?? 0,
           },
         });
       }

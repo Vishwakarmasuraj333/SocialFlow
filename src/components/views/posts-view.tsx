@@ -68,7 +68,6 @@ export default function PostsView() {
   // Single Post Deletion Modal
   const [postToDelete, setPostToDelete] = useState<any | null>(null);
   const [isDeleteProcessing, setIsDeleteProcessing] = useState(false);
-  const [platformNotice, setPlatformNotice] = useState<string | null>(null);
 
   const fetchPosts = async () => {
     setIsLoading(true);
@@ -201,11 +200,7 @@ export default function PostsView() {
       });
       const data = await res.json();
       if (res.ok) {
-        if (data.platformDeletionNotice) {
-          setPlatformNotice(data.platformDeletionNotice);
-        } else {
-          showToast('Post deleted and moved to trash successfully.', 'success');
-        }
+        showToast('Post deleted and moved to trash successfully.', 'success');
         setPostToDelete(null);
         setSelectedPostIds(selectedPostIds.filter((pId) => pId !== id));
         fetchPosts();
@@ -220,12 +215,24 @@ export default function PostsView() {
   };
 
   const handleBulkDelete = async () => {
+    if (selectedPostIds.length === 0) return;
     setIsBulkActionLoading(true);
     try {
-      for (const id of selectedPostIds) {
-        await fetch(`/api/admin/posts/${id}`, { method: 'DELETE' });
+      const res = await fetch('/api/admin/posts', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedPostIds }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(`Successfully deleted ${data.count || selectedPostIds.length} posts to trash.`, 'success');
+      } else {
+        // Fallback to individual deletions
+        for (const id of selectedPostIds) {
+          await fetch(`/api/admin/posts/${id}`, { method: 'DELETE' });
+        }
+        showToast(`Deleted ${selectedPostIds.length} posts to trash.`, 'success');
       }
-      showToast(`Deleted ${selectedPostIds.length} posts to trash.`, 'success');
       setSelectedPostIds([]);
       setIsBulkDeleteModalOpen(false);
       fetchPosts();
@@ -301,7 +308,30 @@ export default function PostsView() {
                 <option value="THREADS">Threads</option>
               </select>
 
-              <Button variant="outline" size="sm" onClick={fetchPosts} className="h-8 rounded-xl px-2.5">
+              {posts.length > 0 && (
+                <Button
+                  variant={selectedPostIds.length === posts.length && posts.length > 0 ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={handleSelectAll}
+                  className="h-8 rounded-xl px-2.5 text-xs font-semibold gap-1.5 shrink-0"
+                  title={selectedPostIds.length === posts.length ? 'Deselect all' : 'Select all visible posts'}
+                >
+                  {selectedPostIds.length === posts.length && posts.length > 0 ? (
+                    <>
+                      <CheckSquare className="h-3.5 w-3.5 text-white" />
+                      <span className="hidden sm:inline">Deselect All</span>
+                    </>
+                  ) : (
+                    <>
+                      <Square className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Select All</span>
+                      <span>({posts.length})</span>
+                    </>
+                  )}
+                </Button>
+              )}
+
+              <Button variant="outline" size="sm" onClick={fetchPosts} className="h-8 rounded-xl px-2.5" title="Refresh posts">
                 <RefreshCw className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -764,22 +794,63 @@ export default function PostsView() {
         </Modal>
       )}
 
-      {/* Platform Deletion Notice Modal (Section 13) */}
-      {platformNotice && (
+      {/* Floating Sticky Bulk Actions Bar */}
+      {selectedPostIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-xl w-[92%] sm:w-auto bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-indigo-500/40 flex items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <div className="flex items-center gap-2.5">
+            <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-black flex items-center justify-center shadow-xs">
+              {selectedPostIds.length}
+            </span>
+            <span className="text-xs font-bold text-slate-200">
+              {selectedPostIds.length === 1 ? '1 post selected' : `${selectedPostIds.length} posts selected`}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelectedPostIds([])}
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              Deselect All
+            </button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => setIsBulkDeleteModalOpen(true)}
+              className="rounded-xl text-xs font-bold gap-1.5 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-transform"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete Selected ({selectedPostIds.length})
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation Modal */}
+      {isBulkDeleteModalOpen && (
         <Modal
-          isOpen={Boolean(platformNotice)}
-          onClose={() => setPlatformNotice(null)}
-          title="Platform API Deletion Notice"
-          description="Official platform API policy notification."
+          isOpen={isBulkDeleteModalOpen}
+          onClose={() => setIsBulkDeleteModalOpen(false)}
+          title={`Delete ${selectedPostIds.length} Selected Posts?`}
+          description="Confirm batch post deletion. These posts will be moved to internal Trash."
           maxWidth="sm"
         >
-          <div className="space-y-4 text-xs">
-            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 space-y-1">
-              <p className="font-semibold">{platformNotice}</p>
-            </div>
-            <div className="flex justify-end">
-              <Button size="sm" onClick={() => setPlatformNotice(null)}>
-                Understood
+          <div className="space-y-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Are you sure you want to delete these <span className="font-bold text-slate-900 dark:text-white">{selectedPostIds.length} selected publications</span>? They will be removed from your active feed and archived in trash.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setIsBulkDeleteModalOpen(false)} disabled={isBulkActionLoading}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleBulkDelete}
+                isLoading={isBulkActionLoading}
+                className="font-bold gap-1.5"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete All Selected ({selectedPostIds.length})
               </Button>
             </div>
           </div>

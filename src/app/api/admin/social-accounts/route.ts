@@ -252,192 +252,39 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Target workspace is required' }, { status: 400 });
     }
 
-    // Check if user explicitly requested 1-click OAuth redirect
-    if (body.authMethod === 'OAUTH' && isConfigured) {
-      const provider = providerFactory.getProvider(platformType);
-      const state = Buffer.from(
-        JSON.stringify({ workspaceId: targetWorkspaceId, userId: auth.user.id, nonce: Date.now() })
-      ).toString('base64');
-      const authUrl = provider.getAuthorizationUrl(state, redirectUri);
-
-      return NextResponse.json({
-        mode: 'OAUTH_REDIRECT',
-        authUrl,
-      });
-    }
-
-    // Identify account username / handle from input
-    const userIdentifier = (loginId || accountHandle || '').trim();
-    if (!userIdentifier && !accountName && !customAccessToken) {
+    // Official OAuth 2.0 connection flow only (NO social password storage)
+    if (!isConfigured) {
       return NextResponse.json(
-        { error: 'Social Account ID / Username / Handle is required' },
+        {
+          error: `Configuration Required: ${providerFactory.getProvider(platformType).capabilities.displayName} API credentials are not configured on the server.`,
+          status: 'CONFIGURATION_REQUIRED',
+          platform: platformType,
+          requiredEnvVars: providerFactory.getProvider(platformType).capabilities.requiredEnvVars,
+          configDocsUrl: providerFactory.getProvider(platformType).capabilities.configDocsUrl,
+        },
         { status: 400 }
       );
     }
 
-    let cleanHandle = userIdentifier.trim();
-    if (cleanHandle.includes('@') && cleanHandle.includes('.')) {
-      const usernamePart = cleanHandle.split('@').filter(Boolean)[0] || cleanHandle;
-      cleanHandle = `@${usernamePart}`;
-    } else if (!cleanHandle.startsWith('@')) {
-      cleanHandle = `@${cleanHandle}`;
-    }
-    if (!cleanHandle || cleanHandle === '@') {
-      cleanHandle = `@${platformType.toLowerCase()}_user`;
-    }
-
-    const cleanName = (accountName || cleanHandle.replace(/^@/, '') || `${platformType} Official`).trim();
-    const platformAccountId = body.platformAccountId || `${platformType.toLowerCase()}_${cleanHandle.replace(/[^a-zA-Z0-9_]/g, '') || Date.now()}`;
-
-    // Token & credential encryption
-    const credentialPayload = JSON.stringify({
-      loginId: loginId || cleanHandle,
-      password: password || undefined,
-      token: customAccessToken || `sf_live_${platformType.toLowerCase()}_${Date.now()}`,
-      authMethod: password ? 'CREDENTIALS' : customAccessToken ? 'ACCESS_TOKEN' : 'DIRECT',
-      connectedAt: new Date().toISOString(),
-    });
-    const encrypted = encryptSecret(credentialPayload);
-
-    // Look up Platform reference if exists
-    const platformRef = await db.platform.findUnique({
-      where: { slug: platformType.toLowerCase() },
-    });
-
-    const parsedMeta = typeof metadataJson === 'string'
-      ? metadataJson
-      : metadataJson
-      ? JSON.stringify(metadataJson)
-      : JSON.stringify({
-          category: `${platformType} ${accountType}`,
-          accountType: String(accountType).toUpperCase(),
-          authMode: password ? 'PASSWORD_AUTHENTICATED' : 'TOKEN_AUTHENTICATED',
-        });
-
-    // Check if account already exists to perform clean upsert/reconnect
-    const existing = await db.socialAccount.findFirst({
-      where: {
-        workspaceId: targetWorkspaceId,
-        platform: platformType,
-        OR: [
-          { platformAccountId },
-          { accountHandle: cleanHandle },
-        ],
-      },
-      include: { credentials: true },
-    });
-
-    let account;
-    if (existing) {
-      account = await db.socialAccount.update({
-        where: { id: existing.id },
-        data: {
-          accountName: cleanName,
-          accountHandle: cleanHandle,
-          accountType: String(accountType).toUpperCase(),
-          status: 'CONNECTED',
-          isSoftDeleted: false,
-          deletedAt: null,
-          lastSyncedAt: new Date(),
-          avatarUrl: avatarUrl || existing.avatarUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(cleanHandle)}`,
-          metadataJson: parsedMeta,
-        },
-        include: {
-          workspace: { select: { id: true, name: true, slug: true } },
-        },
-      });
-
-      if (existing.credentials) {
-        await db.oAuthCredential.update({
-          where: { id: existing.credentials.id },
-          data: {
-            encryptedAccessToken: encrypted.encrypted,
-            iv: encrypted.iv,
-            authTag: encrypted.authTag,
-            tokenExpiresAt: new Date(Date.now() + 60 * 24 * 3600 * 1000),
-          },
-        });
-      } else {
-        await db.oAuthCredential.create({
-          data: {
-            socialAccountId: account.id,
-            encryptedAccessToken: encrypted.encrypted,
-            iv: encrypted.iv,
-            authTag: encrypted.authTag,
-            scopes: 'read,write,publish,analytics',
-            tokenExpiresAt: new Date(Date.now() + 60 * 24 * 3600 * 1000),
-          },
-        });
-      }
-    } else {
-      account = await db.socialAccount.create({
-        data: {
-          workspaceId: targetWorkspaceId,
-          platformId: platformRef?.id || null,
-          platform: platformType,
-          accountName: cleanName,
-          accountHandle: cleanHandle,
-          avatarUrl: avatarUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(cleanHandle)}`,
-          platformAccountId,
-          accountType: String(accountType).toUpperCase(),
-          status: 'CONNECTED',
-          publishingEnabled: Boolean(publishingEnabled),
-          analyticsEnabled: Boolean(analyticsEnabled),
-          messagingEnabled: Boolean(messagingEnabled),
-          metadataJson: parsedMeta,
-          lastSyncedAt: new Date(),
-          credentials: {
-            create: {
-              encryptedAccessToken: encrypted.encrypted,
-              iv: encrypted.iv,
-              authTag: encrypted.authTag,
-              scopes: 'read,write,publish,analytics',
-              tokenExpiresAt: new Date(Date.now() + 60 * 24 * 3600 * 1000), // 60 days
-            },
-          },
-        },
-        include: {
-          workspace: { select: { id: true, name: true, slug: true } },
-        },
-      });
-    }
-
-    // Baseline metric record starts at 0 if no prior snapshot exists
-    const existingMetric = await db.socialAccountMetric.findFirst({
-      where: { socialAccountId: account.id },
-    });
-
-    if (!existingMetric) {
-      await recordMetricSnapshot(account.id, {
-        followers: 0,
-        reach: 0,
-        impressions: 0,
-      });
-    }
-
-    await logAuditEvent({
+    const provider = providerFactory.getProvider(platformType);
+    const { generateOAuthState } = await import('@/lib/oauth-state');
+    const state = await generateOAuthState({
       workspaceId: targetWorkspaceId,
       userId: auth.user.id,
-      action: 'ACCOUNT_CONNECTED',
-      entityType: 'SocialAccount',
-      entityId: account.id,
-      metadata: { platform: platformType, handle: cleanHandle },
+      platform: platformType,
     });
 
+    const authUrl = provider.getAuthorizationUrl(state, redirectUri);
+
     return NextResponse.json({
-      success: true,
-      account: {
-        id: account.id,
-        platform: account.platform,
-        accountName: account.accountName,
-        accountHandle: account.accountHandle,
-        avatarUrl: account.avatarUrl,
-        status: account.status,
-        lastSyncedAt: account.lastSyncedAt,
-      },
+      mode: 'OAUTH_REDIRECT',
+      authUrl,
+      platform: platformType,
+      displayName: provider.capabilities.displayName,
     });
-  } catch (error: any) {
-    console.error('Error connecting social account:', error);
-    return NextResponse.json({ error: error.message || 'Failed to connect social account' }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to process social account action';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+

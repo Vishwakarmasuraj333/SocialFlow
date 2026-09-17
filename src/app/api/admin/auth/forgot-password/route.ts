@@ -12,21 +12,25 @@ export async function POST(req: NextRequest) {
     const cleanEmail = email.toLowerCase().trim();
     const user = await prisma.user.findUnique({ where: { email: cleanEmail } });
 
-    // Always respond with a generic success to prevent email enumeration
+    // Always respond with identical message to prevent account enumeration
+    const genericResponse = {
+      success: true,
+      message: 'If an account exists for this email, password reset instructions have been sent.',
+    };
+
     if (!user) {
-      return NextResponse.json({
-        success: true,
-        message: 'If an authorized admin account exists for this email, recovery instructions have been initiated.',
-      });
+      return NextResponse.json(genericResponse);
     }
 
-    const resetToken = crypto.randomBytes(32).toString('hex');
+    // Generate cryptographically secure one-time token
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
     const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        resetPasswordToken: resetToken,
+        resetPasswordToken: hashedToken,
         resetTokenExpiry,
       },
     });
@@ -43,11 +47,11 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({
-      success: true,
-      message: 'If an authorized admin account exists for this email, recovery instructions have been initiated.',
-      devToken: resetToken,
+      ...genericResponse,
+      ...(process.env.NODE_ENV !== 'production' ? { devToken: rawToken } : {}),
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Error processing request' }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Error processing request';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

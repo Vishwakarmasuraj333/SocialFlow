@@ -1,5 +1,6 @@
 import prisma from '@/lib/db';
-import { ALL_SUPPORTED_PLATFORMS, SupportedPlatform } from '@/components/brand/platform-icons';
+import { ALL_SUPPORTED_PLATFORMS } from '@/components/brand/platform-icons';
+import { providerFactory } from '@/services/social/provider-factory';
 
 export interface PlatformConfigStatus {
   isConfigured: boolean;
@@ -8,35 +9,7 @@ export interface PlatformConfigStatus {
 }
 
 export function checkPlatformConfigStatus(slug: string, connectedCount = 0): PlatformConfigStatus {
-  const upper = slug.toUpperCase();
-  let isConfigured = false;
-
-  switch (upper) {
-    case 'LINKEDIN':
-      isConfigured = Boolean(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET);
-      break;
-    case 'FACEBOOK':
-    case 'INSTAGRAM':
-    case 'THREADS':
-      isConfigured = Boolean(process.env.META_APP_ID && process.env.META_APP_SECRET);
-      break;
-    case 'TWITTER':
-    case 'X':
-      isConfigured = Boolean(process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET);
-      break;
-    case 'TIKTOK':
-      isConfigured = Boolean(process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET);
-      break;
-    case 'YOUTUBE':
-      isConfigured = Boolean(process.env.YOUTUBE_CLIENT_ID && process.env.YOUTUBE_CLIENT_SECRET);
-      break;
-    case 'PINTEREST':
-      isConfigured = Boolean(process.env.PINTEREST_APP_ID && (process.env.PINTEREST_APP_SECRET || process.env.PINTEREST_ACCESS_TOKEN));
-      break;
-    default:
-      isConfigured = false;
-  }
-
+  const isConfigured = providerFactory.isPlatformConfigured(slug);
   const hasConnectedAccounts = connectedCount > 0;
   let status: PlatformConfigStatus['status'] = 'CONFIGURATION_REQUIRED';
 
@@ -65,10 +38,10 @@ export async function ensureDefaultPlatforms() {
       slug: p.id.toLowerCase(),
       logo: p.key,
       category: p.category,
-      oauthEnabled: ['linkedin', 'facebook', 'instagram', 'twitter', 'tiktok', 'youtube', 'pinterest', 'threads'].includes(p.id.toLowerCase()),
+      oauthEnabled: true,
       publishingEnabled: true,
-      analyticsEnabled: ['linkedin', 'facebook', 'instagram', 'twitter', 'tiktok', 'youtube', 'pinterest', 'threads'].includes(p.id.toLowerCase()),
-      messagingEnabled: ['facebook', 'instagram', 'twitter', 'linkedin'].includes(p.id.toLowerCase()),
+      analyticsEnabled: true,
+      messagingEnabled: ['facebook', 'instagram', 'twitter', 'linkedin', 'whatsapp', 'telegram', 'discord'].includes(p.id.toLowerCase()),
       schedulingEnabled: true,
       characterLimit: p.characterLimit || p.charLimit || 2200,
       mediaLimit: p.maxImages || p.imgLimit || 4,

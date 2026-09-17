@@ -39,6 +39,8 @@ import {
   HelpCircle,
   Unplug,
   Zap,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -52,183 +54,241 @@ const CORE_ENTERPRISE_NETWORKS = [
     id: 'instagram',
     slug: 'instagram',
     name: 'Instagram',
+    category: 'Major',
     networkType: 'Meta Graph API',
     apiVersion: 'v19.0',
     characterLimit: 2200,
     mediaLimit: 10,
     brandColor: '#E4405F',
-    tagline: 'Reels, Stories & Feed',
-    idLabel: 'Instagram Handle or Email',
-    idPlaceholder: 'e.g. @itxsurajofficial or name@gmail.com',
+    tagline: 'Reels, Stories & Carousel Feed',
   },
   {
     id: 'facebook',
     slug: 'facebook',
     name: 'Facebook',
+    category: 'Major',
     networkType: 'Meta Pages API',
     apiVersion: 'v19.0',
     characterLimit: 63206,
     mediaLimit: 10,
     brandColor: '#1877F2',
     tagline: 'Pages, Groups & Streams',
-    idLabel: 'Facebook Email or Page ID',
-    idPlaceholder: 'e.g. page_admin@company.com or Page ID',
   },
   {
     id: 'linkedin',
     slug: 'linkedin',
     name: 'LinkedIn',
+    category: 'Major',
     networkType: 'Community & Marketing API',
     apiVersion: 'REST v2',
     characterLimit: 3000,
     mediaLimit: 9,
     brandColor: '#0A66C2',
     tagline: 'Company Pages & Profiles',
-    idLabel: 'LinkedIn Account Email or Handle',
-    idPlaceholder: 'e.g. member@company.com or @company',
   },
   {
     id: 'x',
     slug: 'x',
     name: 'X (Twitter)',
+    category: 'Major',
     networkType: 'X Developer API',
-    apiVersion: 'API v2',
+    apiVersion: 'API v2 (PKCE)',
     characterLimit: 280,
     mediaLimit: 4,
     brandColor: '#000000',
-    tagline: 'Posts, Threads & Media',
-    idLabel: 'X Handle or Account Email',
-    idPlaceholder: 'e.g. @SocialFlowHQ or email@x.com',
+    tagline: 'Posts, Threads & Polls',
   },
   {
     id: 'youtube',
     slug: 'youtube',
     name: 'YouTube',
+    category: 'Video & Media',
     networkType: 'Google Data API',
     apiVersion: 'Data v3',
     characterLimit: 5000,
     mediaLimit: 1,
     brandColor: '#FF0000',
-    tagline: 'Videos, Shorts & Community',
-    idLabel: 'YouTube Channel Handle or Email',
-    idPlaceholder: 'e.g. @ChannelHandle or user@gmail.com',
+    tagline: 'Shorts & 4K Video Uploads',
   },
   {
     id: 'tiktok',
     slug: 'tiktok',
     name: 'TikTok',
+    category: 'Video & Media',
     networkType: 'TikTok Content API',
     apiVersion: 'Content v2',
     characterLimit: 2200,
     mediaLimit: 35,
     brandColor: '#000000',
-    tagline: 'Shorts, Stories & Sounds',
-    idLabel: 'TikTok Username or Mobile/Email',
-    idPlaceholder: 'e.g. @creator_official or user@gmail.com',
+    tagline: 'Creator Videos & Sounds',
   },
   {
     id: 'pinterest',
     slug: 'pinterest',
     name: 'Pinterest',
+    category: 'Major',
     networkType: 'Pinterest API',
     apiVersion: 'REST v5',
     characterLimit: 500,
     mediaLimit: 5,
     brandColor: '#E60023',
-    tagline: 'Visual Boards & Pins',
-    idLabel: 'Pinterest Username or Email',
-    idPlaceholder: 'e.g. @pinterest_brand or user@domain.com',
+    tagline: 'Visual Boards & Rich Pins',
   },
   {
     id: 'threads',
     slug: 'threads',
     name: 'Threads',
+    category: 'Major',
     networkType: 'Threads API',
     apiVersion: 'Threads v1',
     characterLimit: 500,
     mediaLimit: 10,
     brandColor: '#101010',
-    tagline: 'Threads by Meta',
-    idLabel: 'Threads Handle (@username)',
-    idPlaceholder: 'e.g. @itxsurajofficial',
+    tagline: 'Conversations by Meta',
   },
   {
     id: 'reddit',
     slug: 'reddit',
     name: 'Reddit',
+    category: 'Messaging & Community',
     networkType: 'Reddit OAuth API',
     apiVersion: 'OAuth v2',
     characterLimit: 40000,
     mediaLimit: 20,
     brandColor: '#FF4500',
     tagline: 'Subreddits & Communities',
-    idLabel: 'Reddit Username or Account Email',
-    idPlaceholder: 'e.g. u/community_lead or user@reddit.com',
   },
   {
     id: 'discord',
     slug: 'discord',
     name: 'Discord',
+    category: 'Messaging & Community',
     networkType: 'Discord Webhook & Bot API',
     apiVersion: 'Bot v10',
     characterLimit: 2000,
     mediaLimit: 10,
     brandColor: '#5865F2',
     tagline: 'Servers & Announcements',
-    idLabel: 'Discord Account Email or Bot Token',
-    idPlaceholder: 'e.g. user@discord.com or Bot Token',
   },
   {
     id: 'telegram',
     slug: 'telegram',
     name: 'Telegram',
+    category: 'Messaging & Community',
     networkType: 'Telegram Channel API',
     apiVersion: 'Bot API v7',
     characterLimit: 4096,
     mediaLimit: 10,
     brandColor: '#26A5E4',
-    tagline: 'Broadcast Channels & Supergroups',
-    idLabel: 'Telegram Channel (@handle) or Token',
-    idPlaceholder: 'e.g. @SocialFlowHQ or bot token',
+    tagline: 'Broadcast Channels & Groups',
   },
   {
     id: 'whatsapp',
     slug: 'whatsapp',
     name: 'WhatsApp',
+    category: 'Messaging & Community',
     networkType: 'Meta WhatsApp Cloud API',
     apiVersion: 'Cloud v19.0',
     characterLimit: 1000,
     mediaLimit: 10,
     brandColor: '#25D366',
     tagline: 'Official Business Channels',
-    idLabel: 'WhatsApp Business Number / Phone ID',
-    idPlaceholder: 'e.g. +1 (555) 019-2834 or Phone ID',
   },
   {
-    id: 'twitch',
-    slug: 'twitch',
-    name: 'Twitch',
-    networkType: 'Twitch Helix API',
-    apiVersion: 'Helix v5',
+    id: 'bluesky',
+    slug: 'bluesky',
+    name: 'Bluesky',
+    category: 'Publishing & Blogs',
+    networkType: 'AT Protocol API',
+    apiVersion: 'ATProto v1',
+    characterLimit: 300,
+    mediaLimit: 4,
+    brandColor: '#0085FF',
+    tagline: 'Decentralized Social Feed',
+  },
+  {
+    id: 'mastodon',
+    slug: 'mastodon',
+    name: 'Mastodon',
+    category: 'Publishing & Blogs',
+    networkType: 'ActivityPub REST API',
+    apiVersion: 'Mastodon v2',
     characterLimit: 500,
+    mediaLimit: 4,
+    brandColor: '#6364FF',
+    tagline: 'Fediverse Microblogging',
+  },
+  {
+    id: 'tumblr',
+    slug: 'tumblr',
+    name: 'Tumblr',
+    category: 'Publishing & Blogs',
+    networkType: 'Tumblr API',
+    apiVersion: 'API v2',
+    characterLimit: 4096,
+    mediaLimit: 10,
+    brandColor: '#36465D',
+    tagline: 'Visual Microblogging & Tags',
+  },
+  {
+    id: 'medium',
+    slug: 'medium',
+    name: 'Medium',
+    category: 'Publishing & Blogs',
+    networkType: 'Medium Publishing API',
+    apiVersion: 'API v1',
+    characterLimit: 50000,
+    mediaLimit: 20,
+    brandColor: '#000000',
+    tagline: 'Longform Stories & Articles',
+  },
+  {
+    id: 'quora',
+    slug: 'quora',
+    name: 'Quora',
+    category: 'Publishing & Blogs',
+    networkType: 'Quora API',
+    apiVersion: 'API v1',
+    characterLimit: 10000,
+    mediaLimit: 5,
+    brandColor: '#B92B27',
+    tagline: 'Knowledge Sharing & Answers',
+  },
+  {
+    id: 'wordpress',
+    slug: 'wordpress',
+    name: 'WordPress',
+    category: 'Publishing & Blogs',
+    networkType: 'WordPress REST API',
+    apiVersion: 'wp/v2',
+    characterLimit: 100000,
+    mediaLimit: 50,
+    brandColor: '#21759B',
+    tagline: 'Self-Hosted & VIP Publications',
+  },
+  {
+    id: 'vimeo',
+    slug: 'vimeo',
+    name: 'Vimeo',
+    category: 'Video & Media',
+    networkType: 'Vimeo API',
+    apiVersion: 'API v3.4',
+    characterLimit: 5000,
     mediaLimit: 1,
-    brandColor: '#9146FF',
-    tagline: 'Live Streams & Communities',
-    idLabel: 'Twitch Channel Handle or Email',
-    idPlaceholder: 'e.g. streamer_official or user@twitch.tv',
+    brandColor: '#1AB7EA',
+    tagline: 'High-Bitrate Video Showcase',
   },
   {
     id: 'snapchat',
     slug: 'snapchat',
     name: 'Snapchat',
+    category: 'Video & Media',
     networkType: 'Snap Kit Marketing API',
     apiVersion: 'Snap Kit v2',
     characterLimit: 250,
     mediaLimit: 1,
     brandColor: '#FFFC00',
     tagline: 'Spotlight & Public Stories',
-    idLabel: 'Snapchat Public Handle or Email',
-    idPlaceholder: 'e.g. snap_creator or user@snap.com',
   },
 ];
 
@@ -251,15 +311,7 @@ export default function SocialAccountsView() {
   // Connect Modal State
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
   const [selectedPlatformSlug, setSelectedPlatformSlug] = useState<string>('instagram');
-  const [authMethod, setAuthMethod] = useState<'CREDENTIALS' | 'TOKEN' | 'OAUTH'>('CREDENTIALS');
-  const [loginId, setLoginId] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [accountType, setAccountType] = useState<'BUSINESS' | 'CREATOR' | 'PERSONAL'>('BUSINESS');
-  const [accountName, setAccountName] = useState('');
-  const [accountHandle, setAccountHandle] = useState('');
-  const [customAccessToken, setCustomAccessToken] = useState('');
-  const [connectWebsite, setConnectWebsite] = useState<string>('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [modalCategory, setModalCategory] = useState<string>('All');
   const [modalSearch, setModalSearch] = useState<string>('');
@@ -555,7 +607,7 @@ export default function SocialAccountsView() {
     }
   };
 
-  // Connect New Account Submit with Real Credentials
+  // Connect Official Account via Real OAuth 2.0 (Zero password input)
   const handleConnectSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsConnecting(true);
@@ -566,81 +618,31 @@ export default function SocialAccountsView() {
       isConfigured: false,
     };
 
-    const finalId = (loginId || accountHandle || '').trim();
-    if (authMethod === 'CREDENTIALS' && !finalId) {
-      showToast('Please enter your account ID, username, or email', 'error');
-      setIsConnecting(false);
-      return;
-    }
-    if (authMethod === 'CREDENTIALS' && !loginPassword) {
-      showToast('Please enter your account password to authenticate', 'error');
-      setIsConnecting(false);
-      return;
-    }
-
-    let cleanHandle = finalId.trim();
-    if (cleanHandle.includes('@') && cleanHandle.includes('.')) {
-      const usernamePart = cleanHandle.split('@').filter(Boolean)[0] || cleanHandle;
-      cleanHandle = `@${usernamePart}`;
-    } else if (!cleanHandle.startsWith('@')) {
-      cleanHandle = `@${cleanHandle}`;
-    }
-    if (!cleanHandle || cleanHandle === '@') {
-      cleanHandle = (accountHandle.trim() || `@${selectedPlatformSlug}_user`);
-    }
-
-    const cleanName = (accountName.trim() || cleanHandle.replace(/^@/, '') || `${activePlatform.name} Official`).trim();
-
-    const metaPayload = {
-      followers: 0,
-      accountType,
-      authMethod,
-      category: `${activePlatform.name} ${accountType}`,
-      linkedWebsite: connectWebsite.trim() || undefined,
-      lastAuthenticatedAt: new Date().toISOString(),
-    };
-
     try {
-      const res = await fetch('/api/admin/social-accounts', {
+      const res = await fetch('/api/social-accounts/connect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           platform: selectedPlatformSlug.toUpperCase(),
-          accountName: cleanName,
-          accountHandle: cleanHandle,
-          loginId: finalId,
-          password: loginPassword,
-          accountType,
-          authMethod,
-          customAccessToken: customAccessToken.trim() || undefined,
-          status: 'CONNECTED',
-          metadataJson: JSON.stringify(metaPayload),
-          publishingEnabled: true,
-          analyticsEnabled: true,
         }),
       });
 
       const data = await res.json();
 
       if (res.ok && data.mode === 'OAUTH_REDIRECT' && data.authUrl) {
+        showToast(`Redirecting to official ${data.displayName || activePlatform.name} authorization...`, 'info');
         window.location.href = data.authUrl;
         return;
       }
 
-      if (res.ok && (data.success || data.account)) {
-        showToast(`${activePlatform.name} account authenticated and connected successfully!`, 'success');
-        setIsConnectModalOpen(false);
-        setLoginId('');
-        setLoginPassword('');
-        setAccountName('');
-        setAccountHandle('');
-        setCustomAccessToken('');
-        await fetchAccounts();
-      } else {
-        showToast(data.error || 'Authentication failed. Please verify credentials.', 'error');
+      if (data.status === 'CONFIGURATION_REQUIRED' || !res.ok) {
+        showToast(
+          data.error || `${activePlatform.name} API credentials not configured in server environment.`,
+          'error'
+        );
       }
     } catch {
-      showToast('Network error while connecting account', 'error');
+      showToast('Network error while initiating OAuth authorization flow', 'error');
     } finally {
       setIsConnecting(false);
     }
@@ -737,10 +739,6 @@ export default function SocialAccountsView() {
             size="sm"
             onClick={() => {
               setSelectedPlatformSlug('instagram');
-              setLoginId('');
-              setLoginPassword('');
-              setAccountName('');
-              setAccountHandle('');
               setIsConnectModalOpen(true);
             }}
             className="whitespace-nowrap shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm hover:shadow-md transition-all cursor-pointer"
@@ -1068,11 +1066,11 @@ export default function SocialAccountsView() {
 
                     {/* Real Follower / Audience Count */}
                     <div className="px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-[11px]">
-                      <span className="text-slate-500 dark:text-slate-400 font-medium">Followers:</span>
-                      <span className="font-bold text-slate-900 dark:text-white font-mono">
-                        {followersCount !== undefined && followersCount !== null && followersCount >= 0
-                          ? followersCount.toLocaleString()
-                          : '0'}
+                      <span className="text-slate-500 dark:text-slate-400 font-medium">Audience:</span>
+                      <span className="font-bold text-slate-900 dark:text-white font-mono text-[10px]">
+                        {followersCount && followersCount > 0
+                          ? `${followersCount.toLocaleString()} Followers`
+                          : 'Not available from platform API'}
                       </span>
                     </div>
 
@@ -1282,273 +1280,266 @@ export default function SocialAccountsView() {
         isOpen={isConnectModalOpen}
         onClose={() => setIsConnectModalOpen(false)}
         title="Connect Official Social Channel"
-        description="Authenticate and link verified brand profiles, creator channels, or company social pages."
+        description="Authenticate and link verified brand profiles, creator channels, or company social pages via official OAuth 2.0."
         maxWidth="2xl"
       >
         <form onSubmit={handleConnectSubmit} className="space-y-5 py-1">
-          {/* 1. Official Platform Selection Grid */}
-          <div>
-            <div className="flex items-center justify-between mb-2.5">
+          {/* Header Controls: Categories & Search */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
               <label className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center">1</span>
+                <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center shadow-xs">1</span>
                 <span>Select Social Network</span>
               </label>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-bold bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-md">
-                14 Certified Integrations
-              </span>
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-1 rounded-full border border-indigo-200 dark:border-indigo-900/60">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Zero Password Storage</span>
+              </div>
             </div>
 
-            <div className="max-h-[290px] overflow-y-auto pr-1 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              {CORE_ENTERPRISE_NETWORKS.map((plat) => {
-                const isSelected = selectedPlatformSlug === plat.slug;
-                
-                // Custom platform icon background colors
-                const iconBgMap: Record<string, string> = {
-                  instagram: 'bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white',
-                  facebook: 'bg-[#1877F2] text-white',
-                  linkedin: 'bg-[#0A66C2] text-white',
-                  x: 'bg-black text-white dark:bg-white dark:text-black',
-                  youtube: 'bg-[#FF0000] text-white',
-                  tiktok: 'bg-black text-white ring-1 ring-cyan-500/40',
-                  pinterest: 'bg-[#E60023] text-white',
-                  threads: 'bg-black text-white dark:bg-white dark:text-black',
-                  reddit: 'bg-[#FF4500] text-white',
-                  discord: 'bg-[#5865F2] text-white',
-                  telegram: 'bg-[#26A5E4] text-white',
-                  whatsapp: 'bg-[#25D366] text-white',
-                  twitch: 'bg-[#9146FF] text-white',
-                  snapchat: 'bg-[#FFFC00] text-slate-950',
-                };
+            {/* Category Filter Pills with Smooth Transitions */}
+            <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              {[
+                { id: 'All', label: 'All (20)' },
+                { id: 'Major', label: 'Major Brands' },
+                { id: 'Video & Media', label: 'Video & Media' },
+                { id: 'Messaging & Community', label: 'Messaging & Community' },
+                { id: 'Publishing & Blogs', label: 'Publishing & Blogs' },
+              ].map((tab) => (
+                <button
+                  type="button"
+                  key={tab.id}
+                  onClick={() => setModalCategory(tab.id)}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
+                    modalCategory === tab.id
+                      ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/30'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
 
-                return (
-                  <button
-                    type="button"
-                    key={plat.slug}
-                    onClick={() => {
-                      setSelectedPlatformSlug(plat.slug);
-                      setLoginId('');
-                      setLoginPassword('');
-                    }}
-                    className={`p-3 rounded-2xl border-2 text-left flex flex-col justify-between gap-2.5 transition-all cursor-pointer relative overflow-hidden ${
-                      isSelected
-                        ? 'border-indigo-600 dark:border-indigo-400 bg-indigo-50/90 dark:bg-indigo-950/70 shadow-md ring-4 ring-indigo-500/20 scale-[1.02]'
-                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 hover:border-indigo-400 dark:hover:border-indigo-600 hover:bg-slate-50 dark:hover:bg-slate-850'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shadow-xs ${iconBgMap[plat.slug] || 'bg-slate-800 text-white'}`}>
-                        <SocialPlatformIcon platform={plat.slug} size="sm" />
-                      </div>
-                      {isSelected && (
-                        <div className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xs">
-                          <Check className="w-3 h-3 stroke-[3]" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <span className="block text-xs font-bold text-slate-900 dark:text-white truncate">
-                        {plat.name}
-                      </span>
-                      <span className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                        {plat.tagline}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
+            {/* Quick Filter Search */}
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={modalSearch}
+                onChange={(e) => setModalSearch(e.target.value)}
+                placeholder="Filter networks by name, category, or API type..."
+                className="w-full pl-9 pr-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all"
+              />
             </div>
           </div>
 
-          {/* Active Platform Branded Integration Banner */}
+          {/* Platform Selection Grid with Brand Glow & Hover Animation */}
           {(() => {
-            const activeNet = CORE_ENTERPRISE_NETWORKS.find((p) => p.slug === selectedPlatformSlug) || CORE_ENTERPRISE_NETWORKS[0];
-            return (
-              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-slate-50 via-indigo-50/30 to-slate-50 dark:from-slate-900/80 dark:via-indigo-950/20 dark:to-slate-900/80 border-2 border-slate-200 dark:border-slate-800">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-xs shrink-0">
-                    <SocialPlatformIcon platform={activeNet.slug} size="md" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-black text-slate-900 dark:text-white truncate">{activeNet.name} Integration</h4>
-                      <Badge className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 font-bold px-2 shrink-0">
-                        Official API Ready
-                      </Badge>
-                    </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-                      {activeNet.networkType} • Max limit: <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{activeNet.characterLimit.toLocaleString()}</span> chars
-                    </p>
-                  </div>
-                </div>
+            const filteredNets = CORE_ENTERPRISE_NETWORKS.filter((p) => {
+              const matchesCat = modalCategory === 'All' || p.category === modalCategory;
+              const matchesSearch =
+                !modalSearch ||
+                p.name.toLowerCase().includes(modalSearch.toLowerCase()) ||
+                p.slug.toLowerCase().includes(modalSearch.toLowerCase()) ||
+                p.networkType.toLowerCase().includes(modalSearch.toLowerCase());
+              return matchesCat && matchesSearch;
+            });
 
-                <Badge variant="outline" className="text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800 hidden sm:inline-flex px-2.5 py-0.5 shrink-0">
-                  {activeNet.apiVersion}
-                </Badge>
+            return (
+              <div className="max-h-[260px] overflow-y-auto pr-1 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {filteredNets.map((plat) => {
+                  const isSelected = selectedPlatformSlug === plat.slug;
+                  const platFromApi = platforms.find((p) => p.slug === plat.slug);
+                  const isConfigured = Boolean(platFromApi?.isConfigured);
+
+                  return (
+                    <button
+                      type="button"
+                      key={plat.slug}
+                      onClick={() => setSelectedPlatformSlug(plat.slug)}
+                      className={`group p-3 rounded-2xl border-2 text-left flex flex-col justify-between gap-2 transition-all duration-200 cursor-pointer relative overflow-hidden ${
+                        isSelected
+                          ? 'border-indigo-600 dark:border-indigo-400 bg-indigo-50/95 dark:bg-indigo-950/70 shadow-lg shadow-indigo-500/15 ring-4 ring-indigo-500/20 scale-[1.02]'
+                          : 'border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/80 hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-md hover:-translate-y-0.5'
+                      }`}
+                    >
+                      {/* Brand Hover Accent Top Line */}
+                      <div
+                        className="absolute top-0 left-0 right-0 h-1 transition-opacity duration-300"
+                        style={{
+                          backgroundColor: plat.brandColor || '#6366F1',
+                          opacity: isSelected ? 1 : 0,
+                        }}
+                      />
+
+                      <div className="flex items-center justify-between w-full">
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xs group-hover:scale-110 transition-transform duration-200">
+                          <SocialPlatformIcon platform={plat.slug} size="sm" />
+                        </div>
+                        {isSelected ? (
+                          <div className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <span
+                              className={`w-2 h-2 rounded-full ${
+                                isConfigured ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'
+                              }`}
+                              title={isConfigured ? 'Live API Configured' : 'Setup Required'}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="min-w-0">
+                        <span className="block text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                          {plat.name}
+                        </span>
+                        <span className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                          {plat.tagline}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             );
           })()}
 
-          {/* 2. Authentication Mode Tabs */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center">2</span>
-                <span>Authenticate Channel</span>
-              </label>
-              <div className="flex rounded-xl bg-slate-100 dark:bg-slate-950 p-1 border border-slate-200 dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setAuthMethod('CREDENTIALS')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    authMethod === 'CREDENTIALS'
-                      ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs'
-                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  Account Direct Login
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAuthMethod('TOKEN')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    authMethod === 'TOKEN'
-                      ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs'
-                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  API Token / OAuth
-                </button>
-              </div>
-            </div>
+          {/* Active Platform Branded Integration Banner */}
+          {(() => {
+            const activeNet = CORE_ENTERPRISE_NETWORKS.find((p) => p.slug === selectedPlatformSlug) || CORE_ENTERPRISE_NETWORKS[0];
+            const platFromApi = platforms.find((p) => p.slug === selectedPlatformSlug);
+            const isConfigured = Boolean(platFromApi?.isConfigured);
 
-            {/* Direct Account Login Fields */}
-            {authMethod === 'CREDENTIALS' && (() => {
-              const activeNet = CORE_ENTERPRISE_NETWORKS.find((p) => p.slug === selectedPlatformSlug) || CORE_ENTERPRISE_NETWORKS[0];
-              return (
-                <div className="space-y-4 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/70">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5 text-indigo-500" />
-                        <span>{activeNet.name} Username, Handle or Email *</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={loginId}
-                        onChange={(e) => {
-                          setLoginId(e.target.value);
-                          if (!accountHandle) setAccountHandle(e.target.value);
-                        }}
-                        placeholder="e.g. @itxsurajofficial or account@domain.com"
-                        className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
-                      />
-                      <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
-                        Enter your official brand handle or account login email.
-                      </p>
+            return (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-slate-50 via-indigo-50/40 to-slate-50 dark:from-slate-900/90 dark:via-indigo-950/30 dark:to-slate-900/90 border-2 border-slate-200 dark:border-slate-800 shadow-xs">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm shrink-0">
+                      <SocialPlatformIcon platform={activeNet.slug} size="md" />
                     </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                        <Lock className="w-3.5 h-3.5 text-indigo-500" />
-                        <span>Account Password *</span>
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={showLoginPassword ? 'text' : 'password'}
-                          required
-                          value={loginPassword}
-                          onChange={(e) => setLoginPassword(e.target.value)}
-                          placeholder="Enter account password"
-                          className="w-full pl-3.5 pr-10 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowLoginPassword(!showLoginPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer p-1"
-                        >
-                          {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
-                      <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
-                        Encrypted with hardware-isolated AES-256-GCM.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Account Classification */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                      Account Type
-                    </label>
-                    <div className="grid grid-cols-3 gap-2.5">
-                      {(['BUSINESS', 'CREATOR', 'PERSONAL'] as const).map((t) => (
-                        <button
-                          type="button"
-                          key={t}
-                          onClick={() => setAccountType(t)}
-                          className={`py-2.5 px-3 rounded-xl border-2 text-xs font-bold text-center transition-all cursor-pointer ${
-                            accountType === t
-                              ? 'border-indigo-600 dark:border-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500/20'
-                              : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-black text-slate-900 dark:text-white truncate">{activeNet.name} Integration</h4>
+                        <Badge
+                          className={`text-[10px] font-bold px-2 shrink-0 ${
+                            isConfigured
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                              : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
                           }`}
                         >
-                          {t === 'BUSINESS' ? '🏢 Business / Page' : t === 'CREATOR' ? '✨ Creator / Verified' : '👤 Personal Brand'}
-                        </button>
-                      ))}
+                          {isConfigured ? 'Live API Configured' : 'Setup Required'}
+                        </Badge>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                        {activeNet.networkType} • Character limit: <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{activeNet.characterLimit.toLocaleString()}</span> chars
+                      </p>
                     </div>
                   </div>
 
-                  {/* Optional Custom Display Name */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                      Custom Channel Display Name (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={accountName}
-                      onChange={(e) => setAccountName(e.target.value)}
-                      placeholder="e.g. SocialFlow Global (defaults to handle if blank)"
-                      className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
+                  <Badge variant="outline" className="text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800 hidden sm:inline-flex px-2.5 py-0.5 shrink-0">
+                    {activeNet.apiVersion}
+                  </Badge>
+                </div>
+
+                {/* Account Classification */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                    Target Account Type
+                  </label>
+                  <div className="grid grid-cols-3 gap-2.5">
+                    {(['BUSINESS', 'CREATOR', 'PERSONAL'] as const).map((t) => (
+                      <button
+                        type="button"
+                        key={t}
+                        onClick={() => setAccountType(t)}
+                        className={`py-2 px-3 rounded-xl border-2 text-xs font-bold text-center transition-all duration-200 cursor-pointer ${
+                          accountType === t
+                            ? 'border-indigo-600 dark:border-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500/20 shadow-xs'
+                            : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
+                      >
+                        {t === 'BUSINESS' ? '🏢 Business / Page' : t === 'CREATOR' ? '✨ Creator / Verified' : '👤 Personal Brand'}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              );
-            })()}
 
-            {/* API Access Token Fields */}
-            {authMethod === 'TOKEN' && (
-              <div className="space-y-3.5 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                    Platform Bearer Token / Page Access Token *
-                  </label>
-                  <textarea
-                    required
-                    rows={3}
-                    value={customAccessToken}
-                    onChange={(e) => setCustomAccessToken(e.target.value)}
-                    placeholder="Paste official developer Bearer Token or Page Access Token..."
-                    className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
+                {/* Verified API Capabilities Checklist */}
+                <div className="p-3.5 rounded-xl bg-slate-100/70 dark:bg-slate-850/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                  <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    {activeNet.name} Official API Capabilities:
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>Feed & Multi-Channel Publishing</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>Video / Media Assets ({activeNet.mediaLimit} items)</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>Real-time Insights & Analytics</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>OAuth Scopes & Token Refresh</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                    Account Handle / Channel Username *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={accountHandle}
-                    onChange={(e) => setAccountHandle(e.target.value)}
-                    placeholder="e.g. @company_channel"
-                    className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
+                {/* Primary Connection Action or Configuration Required Banner */}
+                {isConfigured ? (
+                  <div className="pt-2">
+                    <Button
+                      type="submit"
+                      isLoading={isConnecting}
+                      className="w-full py-3 h-auto rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-bold text-sm text-white shadow-lg shadow-indigo-500/25 gap-2 cursor-pointer transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
+                    >
+                      <SocialPlatformIcon platform={activeNet.slug} size="sm" />
+                      <span>Authorize & Connect with {activeNet.name}</span>
+                    </Button>
+                    <p className="text-[11px] text-center text-slate-400 dark:text-slate-500 mt-2">
+                      Redirects to official {activeNet.name} OAuth dialog to securely authorize requested scopes.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/25 space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-bold text-amber-700 dark:text-amber-400">
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
+                      <span>CONFIGURATION REQUIRED IN SERVER ENVIRONMENT</span>
+                    </div>
+                    <p className="text-xs text-amber-800/80 dark:text-amber-300/80 leading-relaxed">
+                      {activeNet.name} OAuth developer credentials (Client ID / Secret) are not yet configured in your server environment. Configure them in Admin Settings or .env to start connecting accounts.
+                    </p>
+                    <div className="flex items-center gap-3 pt-1">
+                      <Link
+                        href="/admin/settings/integrations"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-sm transition-colors"
+                      >
+                        <span>Configure in Admin Settings</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </Link>
+                      <Button
+                        type="submit"
+                        variant="outline"
+                        size="sm"
+                        isLoading={isConnecting}
+                        className="text-xs font-semibold rounded-lg"
+                      >
+                        Check Credentials
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            );
+          })()}
 
           {/* Hardware-Grade AES-256-GCM Encryption Assurance */}
           <div className="p-3.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 text-xs text-indigo-950 dark:text-indigo-300 space-y-1">
@@ -1557,21 +1548,13 @@ export default function SocialAccountsView() {
               <span>AES-256-GCM Hardware-Grade Security</span>
             </div>
             <p className="text-[11px] text-indigo-800/80 dark:text-indigo-300/80 leading-relaxed">
-              Passwords and access tokens are cryptographically isolated at rest using AES-256-GCM with authentication tags and are never visible in plaintext.
+              OAuth tokens are cryptographically isolated at rest using AES-256-GCM with authentication tags and are never visible in plaintext or exposed to frontend code.
             </p>
           </div>
 
           <div className="flex justify-end items-center gap-3 pt-2">
-            <Button type="button" variant="ghost" onClick={() => setIsConnectModalOpen(false)} className="rounded-xl">
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              isLoading={isConnecting}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-2.5 rounded-xl shadow-md gap-2"
-            >
-              <ShieldCheck className="w-4 h-4" />
-              <span>{`Connect ${CORE_ENTERPRISE_NETWORKS.find((p) => p.slug === selectedPlatformSlug)?.name || 'Channel'}`}</span>
+            <Button type="button" variant="ghost" onClick={() => setIsConnectModalOpen(false)} className="rounded-xl cursor-pointer">
+              Close
             </Button>
           </div>
         </form>
@@ -1615,7 +1598,17 @@ export default function SocialAccountsView() {
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                 <span className="text-[10px] uppercase font-bold text-slate-400">Followers</span>
                 <p className="font-mono font-bold text-sm text-slate-900 dark:text-white mt-0.5">
-                  {Number(viewAccount.followers) > 0 ? Number(viewAccount.followers).toLocaleString() : 'No data available'}
+                  {viewAccount.followers !== null && viewAccount.followers !== undefined && Number(viewAccount.followers) > 0
+                    ? Number(viewAccount.followers).toLocaleString()
+                    : 'Not available from platform API'}
+                </p>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <span className="text-[10px] uppercase font-bold text-slate-400">Following</span>
+                <p className="font-mono font-bold text-sm text-slate-900 dark:text-white mt-0.5">
+                  {viewAccount.following !== null && viewAccount.following !== undefined && Number(viewAccount.following) > 0
+                    ? Number(viewAccount.following).toLocaleString()
+                    : 'Not available from platform API'}
                 </p>
               </div>
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
@@ -1719,15 +1712,12 @@ export default function SocialAccountsView() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                  Update Password (Optional)
+                  OAuth Authorization Token
                 </label>
-                <input
-                  type="password"
-                  value={editForm.password}
-                  onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
-                  className="w-full px-3.5 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-white"
-                  placeholder="Leave blank to keep unchanged"
-                />
+                <div className="px-3.5 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/60 dark:bg-slate-950/60 text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>Encrypted via AES-256-GCM</span>
+                </div>
               </div>
             </div>
 

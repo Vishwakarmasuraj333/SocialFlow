@@ -4,6 +4,7 @@ import { providerFactory } from '@/services/social/provider-factory';
 import { PlatformType } from '@/services/social/types';
 import { encryptSecret } from '@/lib/encryption';
 import { logAuditEvent } from '@/lib/audit';
+import { verifyOAuthState } from '@/lib/oauth-state';
 
 export async function GET(
   req: NextRequest,
@@ -19,7 +20,7 @@ export async function GET(
 
   if (error) {
     return NextResponse.redirect(
-      `${appUrl}/admin/social/accounts?error=${encodeURIComponent(error)}`
+      `${appUrl}/admin/social/accounts?error=${encodeURIComponent(`Provider returned error: ${error}`)}`
     );
   }
 
@@ -30,56 +31,78 @@ export async function GET(
   }
 
   try {
-    // Decode state
-    let stateData: { workspaceId?: string; userId?: string } = {};
-    try {
-      stateData = JSON.parse(Buffer.from(state, 'base64').toString('utf8'));
-    } catch {
-      stateData = {};
+    // Validate signed state token (CSRF protection)
+    const stateData = await verifyOAuthState(state);
+    if (!stateData) {
+      return NextResponse.redirect(
+        `${appUrl}/admin/social/accounts?error=${encodeURIComponent('Invalid or expired OAuth state token. Please restart connection.')}`
+      );
     }
 
-    const platformType = platform.toUpperCase() as PlatformType;
+    const platformType = (platform === 'TWITTER' ? 'X' : platform.toUpperCase()) as PlatformType;
     const provider = providerFactory.getProvider(platformType);
     const redirectUri = `${appUrl}/api/social-accounts/callback/${platform.toLowerCase()}`;
 
-    // Exchange code for real access token
-    const tokenResult = await provider.exchangeCodeForToken(code, redirectUri);
+    // Exchange authorization code for real access tokens
+    const tokenResult = await provider.handleCallback(code, redirectUri, stateData.codeVerifier);
     const encrypted = encryptSecret(tokenResult.accessToken);
 
-    const workspaceId = stateData.workspaceId || (await prisma.workspace.findFirst())?.id;
+    const workspaceId = stateData.workspaceId;
     if (!workspaceId) {
       throw new Error('No active workspace context found for OAuth connection');
     }
 
     const handle = tokenResult.accountHandle?.startsWith('@')
       ? tokenResult.accountHandle
-      : `@${tokenResult.accountHandle || platform.toLowerCase() + '_verified'}`;
+      : `@${tokenResult.accountHandle || platform.toLowerCase() + '_user'}`;
 
-    const realFollowers = Number((tokenResult.metadata as any)?.followers) || 0;
+    const realFollowers = tokenResult.metadata?.followers ?? null;
+    const realFollowing = tokenResult.metadata?.following ?? null;
+
     const platformRef = await prisma.platform.findUnique({
-      where: { slug: platform.toLowerCase() },
+      where: { slug: platformType.toLowerCase() },
     });
 
-    const account = await prisma.socialAccount.create({
-      data: {
-        workspaceId,
-        platformId: platformRef?.id || null,
-        platform: platformType,
-        accountName: tokenResult.accountName || `${provider.capabilities.displayName} Channel`,
-        accountHandle: handle,
-        avatarUrl: tokenResult.avatarUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(handle)}`,
-        platformAccountId: tokenResult.platformAccountId || `${platform.toLowerCase()}_${Date.now()}`,
-        status: 'CONNECTED',
-        lastSyncedAt: new Date(),
-        metadataJson: JSON.stringify({
-          followers: realFollowers,
-          verified: Boolean((tokenResult.metadata as any)?.verified),
-          category: `${provider.capabilities.displayName} Official Channel`,
-          linkedWebsite: '',
-        }),
-        credentials: {
-          create: {
+    // Check if this platform account is already connected in this workspace
+    const existing = await prisma.socialAccount.findUnique({
+      where: {
+        workspaceId_platform_platformAccountId: {
+          workspaceId,
+          platform: platformType,
+          platformAccountId: tokenResult.platformAccountId,
+        },
+      },
+      include: { credentials: true },
+    });
+
+    let accountId: string;
+
+    if (existing) {
+      // Reconnect existing account
+      const updated = await prisma.socialAccount.update({
+        where: { id: existing.id },
+        data: {
+          accountName: tokenResult.accountName || existing.accountName,
+          accountHandle: handle,
+          avatarUrl: tokenResult.avatarUrl || existing.avatarUrl,
+          status: 'CONNECTED',
+          lastSyncedAt: new Date(),
+          isSoftDeleted: false,
+          metadataJson: JSON.stringify({
+            followers: realFollowers,
+            following: realFollowing,
+            verified: true,
+            category: `${provider.capabilities.displayName} Channel`,
+          }),
+        },
+      });
+
+      if (existing.credentials) {
+        await prisma.oAuthCredential.update({
+          where: { id: existing.credentials.id },
+          data: {
             encryptedAccessToken: encrypted.encrypted,
+            encryptedRefreshToken: tokenResult.refreshToken ? encryptSecret(tokenResult.refreshToken).encrypted : null,
             iv: encrypted.iv,
             authTag: encrypted.authTag,
             scopes: tokenResult.scopes?.join(',') || 'all',
@@ -87,23 +110,59 @@ export async function GET(
               ? new Date(Date.now() + tokenResult.expiresInSeconds * 1000)
               : new Date(Date.now() + 60 * 24 * 3600 * 1000),
           },
-        },
-      },
-    });
+        });
+      }
 
-    if (stateData.userId) {
-      await logAuditEvent({
-        workspaceId,
-        userId: stateData.userId,
-        action: 'ACCOUNT_CONNECTED',
-        entityType: 'SocialAccount',
-        entityId: account.id,
-        metadata: { platform: platformType, handle: account.accountHandle, oauthFlow: 'PKCE_DIRECT' },
+      accountId = updated.id;
+    } else {
+      // Create new connected account
+      const created = await prisma.socialAccount.create({
+        data: {
+          workspaceId,
+          platformId: platformRef?.id || null,
+          platform: platformType,
+          accountName: tokenResult.accountName || `${provider.capabilities.displayName} Channel`,
+          accountHandle: handle,
+          avatarUrl: tokenResult.avatarUrl,
+          platformAccountId: tokenResult.platformAccountId,
+          status: 'CONNECTED',
+          lastSyncedAt: new Date(),
+          metadataJson: JSON.stringify({
+            followers: realFollowers,
+            following: realFollowing,
+            verified: true,
+            category: `${provider.capabilities.displayName} Official Channel`,
+          }),
+          credentials: {
+            create: {
+              encryptedAccessToken: encrypted.encrypted,
+              encryptedRefreshToken: tokenResult.refreshToken ? encryptSecret(tokenResult.refreshToken).encrypted : null,
+              iv: encrypted.iv,
+              authTag: encrypted.authTag,
+              scopes: tokenResult.scopes?.join(',') || 'all',
+              tokenExpiresAt: tokenResult.expiresInSeconds
+                ? new Date(Date.now() + tokenResult.expiresInSeconds * 1000)
+                : new Date(Date.now() + 60 * 24 * 3600 * 1000),
+            },
+          },
+        },
       });
+
+      accountId = created.id;
     }
 
+    // Audit log
+    await logAuditEvent({
+      workspaceId,
+      userId: stateData.userId,
+      action: 'ACCOUNT_CONNECTED',
+      entityType: 'SocialAccount',
+      entityId: accountId,
+      metadata: { platform: platformType, handle, oauthFlow: 'OAUTH2_STATE_VERIFIED' },
+    });
+
     return NextResponse.redirect(
-      `${appUrl}/admin/social/accounts?connected=${encodeURIComponent(account.accountName)}&success=true`
+      `${appUrl}/admin/social/accounts?connected=${encodeURIComponent(tokenResult.accountName || provider.capabilities.displayName)}&success=true`
     );
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'OAuth authorization failed';

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import prisma from '@/lib/db';
 
 export async function POST(req: NextRequest) {
@@ -15,14 +16,32 @@ export async function POST(req: NextRequest) {
 
     if (newPassword.length < 8) {
       return NextResponse.json(
-        { error: 'Password must be at least 8 characters with letters, numbers, and symbols' },
+        { error: 'Password must be at least 8 characters with uppercase, lowercase, numbers, and symbols' },
         { status: 400 }
       );
     }
 
+    // Password complexity check
+    const hasUpper = /[A-Z]/.test(newPassword);
+    const hasLower = /[a-z]/.test(newPassword);
+    const hasNumber = /[0-9]/.test(newPassword);
+    const hasSpecial = /[^A-Za-z0-9]/.test(newPassword);
+
+    if (!hasUpper || !hasLower || !hasNumber || !hasSpecial) {
+      return NextResponse.json(
+        { error: 'Password must include uppercase, lowercase, number, and special character.' },
+        { status: 400 }
+      );
+    }
+
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
     const user = await prisma.user.findFirst({
       where: {
-        resetPasswordToken: token,
+        OR: [
+          { resetPasswordToken: hashedToken },
+          { resetPasswordToken: token },
+        ],
         resetTokenExpiry: { gt: new Date() },
       },
     });
@@ -67,7 +86,8 @@ export async function POST(req: NextRequest) {
       success: true,
       message: 'Password successfully updated. You may now log in with your new administrative credentials.',
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to reset password' }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to reset password';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
