@@ -41,6 +41,10 @@ export class PinterestProvider extends SocialProvider {
     return process.env.PINTEREST_APP_SECRET || '';
   }
 
+  private get directAccessToken(): string {
+    return process.env.PINTEREST_ACCESS_TOKEN || '';
+  }
+
   getAuthorizationUrl(state: string, redirectUri: string): string {
     const scopes = encodeURIComponent('boards:read,pins:read,pins:write,user_accounts:read');
     return `https://www.pinterest.com/oauth/?client_id=${this.appId}&redirect_uri=${encodeURIComponent(
@@ -122,10 +126,11 @@ export class PinterestProvider extends SocialProvider {
     if (!mediaUrl) return { success: false, errorMessage: 'Pinterest requires an image URL for the Pin.' };
 
     try {
+      const token = accessToken || this.directAccessToken;
       const res = await fetch('https://api.pinterest.com/v5/pins', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

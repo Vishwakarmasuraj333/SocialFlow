@@ -62,7 +62,7 @@ class ProviderFactory {
       case 'YOUTUBE':
         return Boolean(process.env.YOUTUBE_CLIENT_ID && process.env.YOUTUBE_CLIENT_SECRET);
       case 'PINTEREST':
-        return Boolean(process.env.PINTEREST_APP_ID && process.env.PINTEREST_APP_SECRET);
+        return Boolean(process.env.PINTEREST_APP_ID && (process.env.PINTEREST_APP_SECRET || process.env.PINTEREST_ACCESS_TOKEN));
       default:
         return false;
     }

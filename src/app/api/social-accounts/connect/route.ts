@@ -54,7 +54,8 @@ export async function POST(req: NextRequest) {
     // Connect account directly with encrypted credentials
     const cleanHandle = (accountHandle || `@${auth.workspace.slug}`).trim();
     const cleanName = (accountName || `${auth.workspace.name} (${provider.capabilities.displayName})`).trim();
-    const rawToken = customAccessToken || `sf_token_${platformType.toLowerCase()}_${Date.now()}`;
+    const defaultPlatformToken = platformType === 'PINTEREST' ? (process.env.PINTEREST_ACCESS_TOKEN || '') : '';
+    const rawToken = customAccessToken || defaultPlatformToken || `sf_token_${platformType.toLowerCase()}_${Date.now()}`;
     const encrypted = encryptSecret(rawToken);
 
     const platformAccountId = `${platformType.toLowerCase()}_${Date.now()}`;

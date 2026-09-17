@@ -31,7 +31,7 @@ export function checkPlatformConfigStatus(slug: string, connectedCount = 0): Pla
       isConfigured = Boolean(process.env.YOUTUBE_CLIENT_ID && process.env.YOUTUBE_CLIENT_SECRET);
       break;
     case 'PINTEREST':
-      isConfigured = Boolean(process.env.PINTEREST_APP_ID && process.env.PINTEREST_APP_SECRET);
+      isConfigured = Boolean(process.env.PINTEREST_APP_ID && (process.env.PINTEREST_APP_SECRET || process.env.PINTEREST_ACCESS_TOKEN));
       break;
     default:
       isConfigured = false;
