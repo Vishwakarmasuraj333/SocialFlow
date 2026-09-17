@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -36,10 +36,16 @@ import {
   Plus,
   Compass,
   AlertTriangle,
+  UploadCloud,
+  Loader2,
+  Film,
+  FolderOpen,
+  Link2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Modal } from '@/components/ui/modal';
 import { useToast } from '@/components/ui/toast';
 import { SocialPlatformIcon } from '@/components/brand/platform-icons';
 
@@ -75,14 +81,85 @@ export default function PublisherView() {
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [newMediaUrl, setNewMediaUrl] = useState('');
 
-  // Publishing & scheduling states
-  const [campaignId, setCampaignId] = useState('');
-  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Real Scheduling & Campaign states
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('12:00');
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>('');
+
+  // Real Desktop File Upload & Media Vault States
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+  const [uploadStatusMessage, setUploadStatusMessage] = useState('');
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [isVaultModalOpen, setIsVaultModalOpen] = useState(false);
+  const [vaultAssets, setVaultAssets] = useState<any[]>([]);
+  const [isLoadingVault, setIsLoadingVault] = useState(false);
+
+  const handleUploadFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setIsUploadingMedia(true);
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const isVideo = file.type.startsWith('video/') || /\.(mp4|mov|webm|avi|mkv)$/i.test(file.name);
+      const isImage = file.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|svg)$/i.test(file.name);
+
+      if (!isImage && !isVideo) {
+        showToast(`Skipping ${file.name}: only images and videos are supported`, 'warning');
+        continue;
+      }
+
+      setUploadStatusMessage(`Uploading "${file.name}" to Cloudinary CDN (${i + 1}/${files.length})...`);
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('name', file.name);
+      formData.append('folder', 'Posts');
+
+      try {
+        const res = await fetch('/api/media', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await res.json();
+        if (res.ok && (data.asset?.url || data.url)) {
+          const uploadedUrl = data.asset?.url || data.url;
+          setMediaUrls((prev) => [...prev, uploadedUrl]);
+          showToast(`Uploaded "${file.name}" to Cloudinary CDN!`, 'success');
+        } else {
+          showToast(data.error || `Failed to upload ${file.name}`, 'error');
+        }
+      } catch {
+        showToast(`Network error while uploading ${file.name}`, 'error');
+      }
+    }
+
+    setIsUploadingMedia(false);
+    setUploadStatusMessage('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const openVaultModal = async () => {
+    setIsVaultModalOpen(true);
+    setIsLoadingVault(true);
+    try {
+      const res = await fetch('/api/media?limit=40');
+      if (res.ok) {
+        const data = await res.json();
+        setVaultAssets(data.assets || []);
+      }
+    } catch {
+      showToast('Failed to load media vault assets', 'error');
+    } finally {
+      setIsLoadingVault(false);
+    }
+  };
 
   useEffect(() => {
     // Set default tomorrow date for scheduling
@@ -415,89 +492,168 @@ export default function PublisherView() {
               />
             </div>
 
-            {/* Media Attachment Vault */}
-            <div className="space-y-2.5 pt-1">
+            {/* Media Attachment & Real Desktop Upload */}
+            <div className="space-y-3 pt-1">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                   <ImageIcon className="w-3.5 h-3.5 text-indigo-500" />
                   <span>Media Assets ({mediaUrls.length})</span>
                 </label>
                 {isMissingRequiredMedia && (
-                  <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-                    * {activePlatformConfig.name} requires media
+                  <span className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    {activePlatformConfig.name} requires an image or video
                   </span>
                 )}
               </div>
 
-              <div className="flex gap-2">
-                <input
-                  type="url"
-                  value={newMediaUrl}
-                  onChange={(e) => setNewMediaUrl(e.target.value)}
-                  placeholder="Paste direct HTTPS image or video URL..."
-                  className="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
-                />
+              {/* Hidden Desktop File Input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                multiple
+                accept="image/*,video/*,.mp4,.mov,.webm"
+                onChange={(e) => handleUploadFiles(e.target.files)}
+                className="hidden"
+              />
+
+              {/* Professional Desktop Drag & Drop Zone */}
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragOver(true);
+                }}
+                onDragLeave={() => setIsDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragOver(false);
+                  handleUploadFiles(e.dataTransfer.files);
+                }}
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-2xl p-5 text-center cursor-pointer transition-all duration-200 ${
+                  isDragOver
+                    ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/40 scale-[1.01]'
+                    : 'border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/60 hover:border-indigo-400 dark:hover:border-indigo-600 hover:bg-slate-100/50 dark:hover:bg-slate-900/50'
+                }`}
+              >
+                {isUploadingMedia ? (
+                  <div className="flex flex-col items-center justify-center py-2 space-y-2">
+                    <Loader2 className="w-7 h-7 text-indigo-500 animate-spin" />
+                    <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                      {uploadStatusMessage || 'Uploading to Cloudinary CDN...'}
+                    </p>
+                    <p className="text-[11px] text-slate-400">Streaming asset to cloud vault...</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-xs">
+                      <UploadCloud className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Drag & drop desktop photos or videos here, or <span className="text-indigo-600 dark:text-indigo-400 underline">browse files</span>
+                      </p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        High-resolution PNG, JPG, WEBP, or MP4, MOV, WEBM videos (Up to 60MB via Cloudinary CDN)
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Toolbar: Browse, Vault, Link */}
+              <div className="flex items-center gap-2 flex-wrap pt-0.5">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={handleAddMedia}
-                  className="rounded-xl border-slate-200 dark:border-slate-800 text-xs font-semibold gap-1 shrink-0"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingMedia}
+                  className="rounded-xl border-slate-200 dark:border-slate-800 text-xs font-semibold gap-1.5"
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Attach</span>
+                  <UploadCloud className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Browse Desktop Files</span>
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={openVaultModal}
+                  disabled={isUploadingMedia}
+                  className="rounded-xl border-slate-200 dark:border-slate-800 text-xs font-semibold gap-1.5"
+                >
+                  <FolderOpen className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Media Vault Library</span>
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowUrlInput(!showUrlInput)}
+                  className="rounded-xl border-slate-200 dark:border-slate-800 text-xs font-semibold gap-1.5 text-slate-600 dark:text-slate-400"
+                >
+                  <Link2 className="w-3.5 h-3.5" />
+                  <span>{showUrlInput ? 'Hide URL Input' : 'Attach Direct URL'}</span>
                 </Button>
               </div>
 
-              {/* Quick Preset Buttons */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Quick Presets:</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const sampleImages = [
-                      'https://images.unsplash.com/photo-1544717305-2782549b5136?w=1200&auto=format&fit=crop&q=80',
-                      'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&auto=format&fit=crop&q=80',
-                      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80'
-                    ];
-                    const chosen = sampleImages[mediaUrls.length % sampleImages.length];
-                    setMediaUrls([...mediaUrls, chosen]);
-                    showToast('High-resolution 4K image attached', 'success');
-                  }}
-                  className="text-[11px] px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-semibold hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors"
-                >
-                  📸 Add 4K Image
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const videoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
-                    if (!mediaUrls.includes(videoUrl)) {
-                      setMediaUrls([...mediaUrls, videoUrl]);
-                      showToast('HD video asset attached', 'success');
-                    }
-                  }}
-                  className="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors"
-                >
-                  🎬 Add HD Video
-                </button>
-              </div>
+              {/* Direct HTTPS URL Input Drawer */}
+              {showUrlInput && (
+                <div className="flex gap-2 animate-in fade-in duration-150 pt-1">
+                  <input
+                    type="url"
+                    value={newMediaUrl}
+                    onChange={(e) => setNewMediaUrl(e.target.value)}
+                    placeholder="Paste direct HTTPS image or video URL (e.g. https://...)"
+                    className="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddMedia}
+                    className="rounded-xl border-slate-200 dark:border-slate-800 text-xs font-semibold gap-1 shrink-0"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Attach</span>
+                  </Button>
+                </div>
+              )}
 
+              {/* Attached Media Cards */}
               {mediaUrls.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
-                  {mediaUrls.map((url, i) => (
-                    <div key={i} className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-900 aspect-video">
-                      <img src={url} alt="Attachment" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveMedia(i)}
-                        className="absolute top-1 right-1 p-1 rounded-lg bg-black/70 text-white hover:bg-rose-600 transition-colors"
-                        title="Remove media"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1.5">
+                  {mediaUrls.map((url, i) => {
+                    const isVideo = /\.(mp4|mov|webm)(\?.*)?$/i.test(url) || url.includes('/video/');
+                    return (
+                      <div key={i} className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-900 aspect-video shadow-xs">
+                        {isVideo ? (
+                          <div className="w-full h-full relative bg-slate-950 flex items-center justify-center">
+                            <video src={url} className="w-full h-full object-cover" preload="metadata" />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                              <Play className="w-6 h-6 text-white drop-shadow-md" />
+                            </div>
+                            <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/70 text-[9px] font-mono font-bold text-white flex items-center gap-1">
+                              <Film className="w-2.5 h-2.5" /> VIDEO
+                            </span>
+                          </div>
+                        ) : (
+                          <img src={url} alt="Attachment" className="w-full h-full object-cover" />
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMedia(i)}
+                          className="absolute top-1.5 right-1.5 p-1 rounded-lg bg-black/80 text-white hover:bg-rose-600 transition-colors shadow-xs"
+                          title="Remove media"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -600,10 +756,23 @@ export default function PublisherView() {
                 {previewContent || 'Your post caption will be previewed here in real-time...'}
               </p>
 
-              {/* Media Preview */}
+              {/* Media Preview (Video or Image) */}
               {mediaUrls.length > 0 && (
-                <div className="rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 aspect-video bg-black/40">
-                  <img src={mediaUrls[0]} alt="Preview" className="w-full h-full object-cover" />
+                <div className="rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 aspect-video bg-black flex items-center justify-center">
+                  {/\.(mp4|mov|webm)(\?.*)?$/i.test(mediaUrls[0]) || mediaUrls[0].includes('/video/') ? (
+                    <video
+                      src={mediaUrls[0]}
+                      controls
+                      playsInline
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <img
+                      src={mediaUrls[0]}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  )}
                 </div>
               )}
 
@@ -648,6 +817,96 @@ export default function PublisherView() {
           </Card>
         </div>
       </div>
+
+      {/* Media Vault Selection Modal */}
+      <Modal
+        isOpen={isVaultModalOpen}
+        onClose={() => setIsVaultModalOpen(false)}
+        title="Select Asset from Media Vault"
+        description="Choose high-resolution photos or videos previously uploaded to your Cloudinary storage."
+        maxWidth="4xl"
+      >
+        <div className="space-y-4">
+          {isLoadingVault ? (
+            <div className="py-12 text-center space-y-2">
+              <Loader2 className="w-8 h-8 text-indigo-500 animate-spin mx-auto" />
+              <p className="text-xs text-slate-500">Querying Cloudinary media repository...</p>
+            </div>
+          ) : vaultAssets.length === 0 ? (
+            <div className="py-12 text-center space-y-3">
+              <FolderOpen className="w-10 h-10 text-slate-400 mx-auto" />
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                No media assets found in vault yet
+              </p>
+              <p className="text-xs text-slate-500">
+                Upload files directly from your desktop using the dropzone on the publisher screen.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[60vh] overflow-y-auto p-1">
+              {vaultAssets.map((asset) => {
+                const isSelected = mediaUrls.includes(asset.url);
+                const isVideo = asset.type === 'VIDEO' || /\.(mp4|mov|webm)(\?.*)?$/i.test(asset.url);
+                return (
+                  <div
+                    key={asset.id}
+                    onClick={() => {
+                      if (isSelected) {
+                        setMediaUrls(mediaUrls.filter((u) => u !== asset.url));
+                      } else {
+                        setMediaUrls([...mediaUrls, asset.url]);
+                        showToast(`Attached "${asset.name || 'asset'}"`, 'success');
+                      }
+                    }}
+                    className={`group relative rounded-xl overflow-hidden border cursor-pointer aspect-video transition-all ${
+                      isSelected
+                        ? 'border-indigo-500 ring-2 ring-indigo-500 shadow-md'
+                        : 'border-slate-200 dark:border-slate-800 hover:border-indigo-400'
+                    }`}
+                  >
+                    {isVideo ? (
+                      <div className="w-full h-full bg-slate-950 flex items-center justify-center relative">
+                        <video src={asset.url} className="w-full h-full object-cover" preload="metadata" />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <Play className="w-6 h-6 text-white" />
+                        </div>
+                        <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/70 text-[9px] font-mono text-white">
+                          VIDEO
+                        </span>
+                      </div>
+                    ) : (
+                      <img src={asset.url} alt={asset.name} className="w-full h-full object-cover" />
+                    )}
+
+                    <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+                      <p className="text-[10px] text-white font-medium truncate">{asset.name || 'Cloud Asset'}</p>
+                    </div>
+
+                    {isSelected && (
+                      <div className="absolute top-1.5 right-1.5 bg-indigo-600 text-white rounded-full p-0.5 shadow">
+                        <Check className="w-3.5 h-3.5" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="flex justify-between items-center pt-3 border-t border-slate-200 dark:border-slate-800">
+            <span className="text-xs text-slate-500 font-mono">
+              {mediaUrls.length} asset{mediaUrls.length === 1 ? '' : 's'} attached
+            </span>
+            <Button
+              type="button"
+              onClick={() => setIsVaultModalOpen(false)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-xl"
+            >
+              Done
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
