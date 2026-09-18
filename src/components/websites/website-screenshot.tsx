@@ -14,22 +14,18 @@ interface WebsiteScreenshotProps {
   showBrowserBar?: boolean;
 }
 
-// Map known internal and featured domains directly to high-resolution real preview assets
+// Map internal SocialFlow app domains directly to high-resolution local preview asset
 const LOCAL_DOMAIN_PREVIEWS: Record<string, string> = {
   'socialflow.io': '/images/websites/socialflow-app.jpg',
   'socialflow-zeta-one.vercel.app': '/images/websites/socialflow-app.jpg',
   'app.socialflow.io': '/images/websites/socialflow-app.jpg',
   'blog.socialflow.io': '/images/websites/socialflow-blog.jpg',
   'docs.socialflow.io': '/images/websites/socialflow-docs.jpg',
-  'suraj-animation-portfolio.vercel.app': '/previews/suraj-portfolio.png',
-  'tuvaa.com': '/previews/tuvaa.png',
-  'tuvaa.vercel.app': '/previews/tuvaa.png',
-  'fototrendz.com': '/previews/fototrendz.png',
-  'developers.pinterest.com': 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
 };
 
 function resolveWebsitePreview(domain: string, url?: string | null, previewImage?: string | null): string | null {
-  if (previewImage && previewImage.trim()) {
+  // Discard any legacy fake Unsplash stock placeholder images
+  if (previewImage && previewImage.trim() && !previewImage.includes('unsplash.com')) {
     return previewImage.trim();
   }
 
@@ -38,23 +34,12 @@ function resolveWebsitePreview(domain: string, url?: string | null, previewImage
     return LOCAL_DOMAIN_PREVIEWS[clean];
   }
 
-  // Dynamic heuristic matching for known domains & keywords
-  if (clean.includes('suraj') || clean.includes('animation') || clean.includes('portfolio')) {
-    return '/previews/suraj-portfolio.png';
-  }
+  // Exact match for SocialFlow internal app
   if (clean.includes('socialflow') || clean.includes('zeta-one')) {
     return '/images/websites/socialflow-app.jpg';
   }
-  if (clean.includes('tuvaa')) {
-    return '/previews/tuvaa.png';
-  }
-  if (clean.includes('fototrendz')) {
-    return '/previews/fototrendz.png';
-  }
-  if (clean.includes('pinterest')) {
-    return 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80';
-  }
 
+  // For any other link/domain, return null so it captures the 100% REAL LIVE website screenshot
   return null;
 }
 
@@ -79,10 +64,9 @@ export function WebsiteScreenshot({
   // Check if a direct local preview image or configured preview image is available
   const resolvedImg = resolveWebsitePreview(cleanDomain, targetUrl, previewImage);
 
-  // High-reliability live real-time screenshot capture services (excluding broken WordPress mshots)
+  // High-reliability live real-time screenshot capture services (Headless Chromium live capture)
   const liveScreenshotSources = [
     `https://api.microlink.io/?url=${encodeURIComponent(targetUrl)}&screenshot=true&meta=false&embed=screenshot.url`,
-    `https://v1.screenshot.11ty.dev/${encodeURIComponent(targetUrl)}/opengraph/`,
     `https://image.thum.io/get/width/1200/crop/800/noanimate/${targetUrl}`,
   ];
 

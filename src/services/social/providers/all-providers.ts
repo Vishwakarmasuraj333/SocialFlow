@@ -725,7 +725,7 @@ export class PinterestProvider extends SocialProvider {
     maxImages: 5,
     supportsVideo: true,
     requiresMediaForPosting: true,
-    requiredEnvVars: ['PINTEREST_APP_ID', 'PINTEREST_APP_SECRET'],
+    requiredEnvVars: ['PINTEREST_APP_ID', 'PINTEREST_ACCESS_TOKEN'],
     configDocsUrl: 'https://developers.pinterest.com/docs/api/v5/',
   };
 
@@ -737,8 +737,8 @@ export class PinterestProvider extends SocialProvider {
 
   async handleCallback(code: string, redirectUri: string): Promise<TokenExchangeResult> {
     const appId = process.env.PINTEREST_APP_ID || '';
-    const appSecret = process.env.PINTEREST_APP_SECRET || '';
-    if (!appId || !appSecret) throw new Error('Pinterest App credentials not configured in environment.');
+    const appSecret = process.env.PINTEREST_APP_SECRET || process.env.PINTEREST_ACCESS_TOKEN || '';
+    if (!appId) throw new Error('Pinterest App credentials not configured in environment.');
 
     const basicAuth = Buffer.from(`${appId}:${appSecret}`).toString('base64');
     const res = await fetch('https://api.pinterest.com/v5/oauth/token', {

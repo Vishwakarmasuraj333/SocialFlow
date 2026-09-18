@@ -58,7 +58,7 @@ export const INTEGRATION_SPECS = [
     name: 'Pinterest',
     category: 'Social & Professional',
     api: 'Pinterest API v5',
-    envKeys: ['PINTEREST_APP_ID', 'PINTEREST_APP_SECRET'],
+    envKeys: ['PINTEREST_APP_ID', 'PINTEREST_ACCESS_TOKEN'],
     scopes: ['boards:read', 'pins:read', 'pins:write'],
     docUrl: 'https://developers.pinterest.com/docs/api/v5/',
     brandColor: '#E60023',

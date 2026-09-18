@@ -101,7 +101,10 @@ class ProviderFactory {
           (process.env.YOUTUBE_CLIENT_ID && process.env.YOUTUBE_CLIENT_SECRET)
         );
       case 'PINTEREST':
-        return Boolean(process.env.PINTEREST_APP_ID && process.env.PINTEREST_APP_SECRET);
+        return Boolean(
+          process.env.PINTEREST_ACCESS_TOKEN ||
+          (process.env.PINTEREST_APP_ID && (process.env.PINTEREST_APP_SECRET || process.env.PINTEREST_ACCESS_TOKEN))
+        );
       case 'SNAPCHAT':
         return Boolean(process.env.SNAPCHAT_CLIENT_ID && process.env.SNAPCHAT_CLIENT_SECRET);
       case 'REDDIT':

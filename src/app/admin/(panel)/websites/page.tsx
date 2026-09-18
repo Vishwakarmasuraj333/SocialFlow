@@ -35,13 +35,13 @@ function detectInfrastructure(input: string) {
       preview: '/images/websites/socialflow-app.jpg',
     };
   }
-  if (lower.includes('portfolio') || lower.includes('agency') || lower.includes('suraj') || lower.includes('animation')) {
+  if (lower.includes('portfolio') || lower.includes('agency')) {
     return {
       hosting: 'Vercel Production',
-      framework: 'React 19 / Three.js WebGL',
+      framework: 'Next.js 16 / React 19',
       cms: 'Creative Agency Studio',
       notes: 'Monitored Client Experiences',
-      preview: '/previews/suraj-portfolio.png',
+      preview: '',
     };
   }
   if (lower.includes('tuvaa') || lower.includes('shop') || lower.includes('store')) {
@@ -50,16 +50,16 @@ function detectInfrastructure(input: string) {
       framework: 'Next.js 16 / React',
       cms: 'Commerce Cloud Engine',
       notes: 'Digital Commerce Platform',
-      preview: '/previews/tuvaa.png',
+      preview: '',
     };
   }
-  if (lower.includes('media') || lower.includes('trend') || lower.includes('fototrendz')) {
+  if (lower.includes('media') || lower.includes('trend')) {
     return {
       hosting: 'Cloudflare Pages / Edge',
       framework: 'React 19 / Vite',
       cms: 'Visual Media Platform',
       notes: 'High-Bitrate Media Gateway',
-      preview: '/previews/fototrendz.png',
+      preview: '',
     };
   }
   if (lower.includes('pinterest')) {
@@ -68,7 +68,7 @@ function detectInfrastructure(input: string) {
       framework: 'React / Node.js Core',
       cms: 'Developer Web Platform',
       notes: 'Official OAuth & Webhook Gateway',
-      preview: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
+      preview: '',
     };
   }
   if (lower.includes('github.com')) {
