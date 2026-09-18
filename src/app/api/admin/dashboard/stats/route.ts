@@ -62,11 +62,10 @@ export async function GET() {
       // Media Assets
       prisma.mediaAsset.count({ where: workspaceId ? { workspaceId } : {} }),
 
-      // Infrastructure Assets (Exclude ARCHIVED)
+      // Infrastructure Assets (Exclude TERMINATED)
       prisma.infrastructureAsset.count({
         where: {
-          isArchived: false,
-          status: { not: 'ARCHIVED' },
+          status: { not: 'TERMINATED' },
           ...(workspaceId ? { workspaceId } : {}),
         },
       }),
