@@ -14,11 +14,47 @@ interface WebsiteScreenshotProps {
   showBrowserBar?: boolean;
 }
 
+// Map known internal and featured domains directly to high-resolution real preview assets
+const LOCAL_DOMAIN_PREVIEWS: Record<string, string> = {
+  'socialflow.io': '/images/websites/socialflow-app.jpg',
+  'socialflow-zeta-one.vercel.app': '/images/websites/socialflow-app.jpg',
+  'app.socialflow.io': '/images/websites/socialflow-app.jpg',
+  'blog.socialflow.io': '/images/websites/socialflow-blog.jpg',
+  'docs.socialflow.io': '/images/websites/socialflow-docs.jpg',
+  'suraj-animation-portfolio.vercel.app': '/previews/suraj-portfolio.png',
+  'tuvaa.com': '/previews/tuvaa.png',
+  'tuvaa.vercel.app': '/previews/tuvaa.png',
+  'fototrendz.com': '/previews/fototrendz.png',
+  'developers.pinterest.com': 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
+};
+
 function resolveWebsitePreview(domain: string, url?: string | null, previewImage?: string | null): string | null {
-  // Only use explicitly provided custom remote URLs (e.g. Cloudinary / S3 uploaded images)
-  if (previewImage && previewImage.trim() && (previewImage.startsWith('http://') || previewImage.startsWith('https://'))) {
+  if (previewImage && previewImage.trim()) {
     return previewImage.trim();
   }
+
+  const clean = (domain || '').toLowerCase().replace(/^(https?:\/\/)+/gi, '').replace(/\/.*$/, '').trim();
+  if (LOCAL_DOMAIN_PREVIEWS[clean]) {
+    return LOCAL_DOMAIN_PREVIEWS[clean];
+  }
+
+  // Dynamic heuristic matching for known domains & keywords
+  if (clean.includes('suraj') || clean.includes('animation') || clean.includes('portfolio')) {
+    return '/previews/suraj-portfolio.png';
+  }
+  if (clean.includes('socialflow') || clean.includes('zeta-one')) {
+    return '/images/websites/socialflow-app.jpg';
+  }
+  if (clean.includes('tuvaa')) {
+    return '/previews/tuvaa.png';
+  }
+  if (clean.includes('fototrendz')) {
+    return '/previews/fototrendz.png';
+  }
+  if (clean.includes('pinterest')) {
+    return 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80';
+  }
+
   return null;
 }
 
@@ -40,27 +76,27 @@ export function WebsiteScreenshot({
   targetUrl = targetUrl.replace(/^(https?:\/\/)+/gi, '');
   targetUrl = `https://${targetUrl}`;
 
-  // Check if a direct custom remote preview image was uploaded
-  const customImg = resolveWebsitePreview(cleanDomain, targetUrl, previewImage);
+  // Check if a direct local preview image or configured preview image is available
+  const resolvedImg = resolveWebsitePreview(cleanDomain, targetUrl, previewImage);
 
-  // High-reliability live real-time screenshot capture services
+  // High-reliability live real-time screenshot capture services (excluding broken WordPress mshots)
   const liveScreenshotSources = [
-    `https://image.thum.io/get/width/1200/crop/800/noanimate/${targetUrl}`,
-    `https://s0.wp.com/mshots/v1/${encodeURIComponent(targetUrl)}?w=1200`,
     `https://api.microlink.io/?url=${encodeURIComponent(targetUrl)}&screenshot=true&meta=false&embed=screenshot.url`,
+    `https://v1.screenshot.11ty.dev/${encodeURIComponent(targetUrl)}/opengraph/`,
+    `https://image.thum.io/get/width/1200/crop/800/noanimate/${targetUrl}`,
   ];
 
-  const initialImage = customImg || liveScreenshotSources[0];
+  const initialImage = resolvedImg || liveScreenshotSources[0];
 
   const [activeImage, setActiveImage] = useState<string | null>(initialImage);
   const [sourceIndex, setSourceIndex] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(!customImg);
+  const [isLoading, setIsLoading] = useState<boolean>(!resolvedImg);
   const [hasFailedAll, setHasFailedAll] = useState<boolean>(false);
 
   useEffect(() => {
-    const custom = resolveWebsitePreview(cleanDomain, targetUrl, previewImage);
-    if (custom) {
-      setActiveImage(custom);
+    const direct = resolveWebsitePreview(cleanDomain, targetUrl, previewImage);
+    if (direct) {
+      setActiveImage(direct);
       setIsLoading(false);
       setHasFailedAll(false);
     } else {
@@ -71,12 +107,18 @@ export function WebsiteScreenshot({
 
       const timer = setTimeout(() => {
         setIsLoading(false);
-      }, 3500);
+      }, 4000);
       return () => clearTimeout(timer);
     }
   }, [cleanDomain, targetUrl, previewImage]);
 
   const handleImageError = () => {
+    if (activeImage && (activeImage.startsWith('/images/') || activeImage.startsWith('/previews/'))) {
+      setActiveImage(liveScreenshotSources[0]);
+      setSourceIndex(0);
+      return;
+    }
+
     if (sourceIndex < liveScreenshotSources.length - 1) {
       const nextIndex = sourceIndex + 1;
       setSourceIndex(nextIndex);

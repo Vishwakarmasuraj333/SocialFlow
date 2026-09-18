@@ -32,16 +32,16 @@ function detectInfrastructure(input: string) {
       framework: 'Next.js 16 / TypeScript',
       cms: 'SocialFlow SaaS Engine',
       notes: '18 Monitored Admin Routes',
-      preview: '',
+      preview: '/images/websites/socialflow-app.jpg',
     };
   }
-  if (lower.includes('portfolio') || lower.includes('agency')) {
+  if (lower.includes('portfolio') || lower.includes('agency') || lower.includes('suraj') || lower.includes('animation')) {
     return {
       hosting: 'Vercel Production',
-      framework: 'Next.js 16 / React 19',
+      framework: 'React 19 / Three.js WebGL',
       cms: 'Creative Agency Studio',
       notes: 'Monitored Client Experiences',
-      preview: '',
+      preview: '/previews/suraj-portfolio.png',
     };
   }
   if (lower.includes('tuvaa') || lower.includes('shop') || lower.includes('store')) {
@@ -50,16 +50,16 @@ function detectInfrastructure(input: string) {
       framework: 'Next.js 16 / React',
       cms: 'Commerce Cloud Engine',
       notes: 'Digital Commerce Platform',
-      preview: '',
+      preview: '/previews/tuvaa.png',
     };
   }
-  if (lower.includes('media') || lower.includes('trend')) {
+  if (lower.includes('media') || lower.includes('trend') || lower.includes('fototrendz')) {
     return {
       hosting: 'Cloudflare Pages / Edge',
       framework: 'React 19 / Vite',
       cms: 'Visual Media Platform',
       notes: 'High-Bitrate Media Gateway',
-      preview: '',
+      preview: '/previews/fototrendz.png',
     };
   }
   if (lower.includes('pinterest')) {
@@ -68,7 +68,7 @@ function detectInfrastructure(input: string) {
       framework: 'React / Node.js Core',
       cms: 'Developer Web Platform',
       notes: 'Official OAuth & Webhook Gateway',
-      preview: '',
+      preview: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
     };
   }
   if (lower.includes('github.com')) {
@@ -673,23 +673,6 @@ export default function AllWebsitesPage() {
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
-
-            {/* Automatic Real Live Website Preview directly from Domain/URL */}
-            {form.domain && form.domain.includes('.') && form.domain.length >= 4 && (
-              <div className="sm:col-span-2 space-y-1.5 pt-1">
-                <span className="text-slate-400 text-[10px] uppercase font-semibold flex items-center justify-between">
-                  <span>Live Website Preview</span>
-                  <span className="text-emerald-500 font-mono text-[10px]">Real-time Live Capture</span>
-                </span>
-                <WebsiteScreenshot
-                  domain={form.domain}
-                  url={form.url || `https://${form.domain}`}
-                  name={form.name || form.domain}
-                  aspectRatio="wide"
-                  showBrowserBar={true}
-                />
-              </div>
-            )}
           </div>
 
           <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
@@ -836,23 +819,6 @@ export default function AllWebsitesPage() {
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
-
-            {/* Automatic Real Live Website Preview directly from Domain/URL */}
-            {editForm.domain && editForm.domain.includes('.') && (
-              <div className="sm:col-span-2 space-y-1.5 pt-1">
-                <span className="text-slate-400 text-[10px] uppercase font-semibold flex items-center justify-between">
-                  <span>Live Website Preview</span>
-                  <span className="text-emerald-500 font-mono text-[10px]">Real-time Live Capture</span>
-                </span>
-                <WebsiteScreenshot
-                  domain={editForm.domain}
-                  url={editForm.url || `https://${editForm.domain}`}
-                  name={editForm.name || editForm.domain}
-                  aspectRatio="wide"
-                  showBrowserBar={true}
-                />
-              </div>
-            )}
           </div>
 
           <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
