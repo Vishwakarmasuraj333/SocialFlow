@@ -81,6 +81,7 @@ export default function AdminSocialAccountsPage() {
   const [customClientSecret, setCustomClientSecret] = useState<string>('');
   const [showSecret, setShowSecret] = useState<boolean>(false);
   const [isSavingCreds, setIsSavingCreds] = useState<boolean>(false);
+  const [showCredsEditor, setShowCredsEditor] = useState<boolean>(false);
   const [copiedCallback, setCopiedCallback] = useState<boolean>(false);
   const [accountHandle, setAccountHandle] = useState<string>('');
   const [accountName, setAccountName] = useState<string>('');
