@@ -68,7 +68,7 @@ function detectInfrastructure(input: string) {
       framework: 'React / Node.js Core',
       cms: 'Pinterest Developer Engine',
       notes: 'Official OAuth & Webhook Gateway',
-      preview: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
+      preview: '',
     };
   }
   if (lower.includes('github.com')) {
@@ -674,33 +674,17 @@ export default function AllWebsitesPage() {
               />
             </div>
 
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Visual Screenshot Asset / Preview Image URL (Optional)
-              </label>
-              <input
-                type="text"
-                value={form.deploymentUrl}
-                onChange={(e) => setForm({ ...form, deploymentUrl: e.target.value })}
-                placeholder="e.g. /previews/suraj-portfolio.png or /images/websites/socialflow-app.jpg"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-mono"
-              />
-              <p className="text-[10px] text-slate-400 mt-1">
-                Custom screenshot asset. Leave blank to automatically capture high-definition live preview from URL.
-              </p>
-            </div>
-
-            {/* Real-time screenshot preview when typing domain/url */}
+            {/* Automatic Real Live Website Preview directly from Domain/URL */}
             {form.domain && form.domain.includes('.') && form.domain.length >= 4 && (
               <div className="sm:col-span-2 space-y-1.5 pt-1">
-                <span className="text-slate-400 text-[10px] uppercase font-semibold block">
-                  Live Screenshot Preview
+                <span className="text-slate-400 text-[10px] uppercase font-semibold flex items-center justify-between">
+                  <span>Live Website Preview</span>
+                  <span className="text-emerald-500 font-mono text-[10px]">Real-time Live Capture</span>
                 </span>
                 <WebsiteScreenshot
                   domain={form.domain}
                   url={form.url || `https://${form.domain}`}
                   name={form.name || form.domain}
-                  previewImage={form.deploymentUrl}
                   aspectRatio="wide"
                   showBrowserBar={true}
                 />
@@ -853,33 +837,17 @@ export default function AllWebsitesPage() {
               />
             </div>
 
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Visual Screenshot Asset / Preview Image URL (Optional)
-              </label>
-              <input
-                type="text"
-                value={editForm.deploymentUrl}
-                onChange={(e) => setEditForm({ ...editForm, deploymentUrl: e.target.value })}
-                placeholder="e.g. /previews/suraj-portfolio.png, /images/websites/socialflow-app.jpg or https://..."
-                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-mono"
-              />
-              <p className="text-[10px] text-slate-400 mt-1">
-                Custom screenshot asset. Leave blank to automatically capture high-definition live preview from URL.
-              </p>
-            </div>
-
-            {/* Live Screenshot Preview */}
+            {/* Automatic Real Live Website Preview directly from Domain/URL */}
             {editForm.domain && editForm.domain.includes('.') && (
               <div className="sm:col-span-2 space-y-1.5 pt-1">
-                <span className="text-slate-400 text-[10px] uppercase font-semibold block">
-                  Live Screenshot Preview
+                <span className="text-slate-400 text-[10px] uppercase font-semibold flex items-center justify-between">
+                  <span>Live Website Preview</span>
+                  <span className="text-emerald-500 font-mono text-[10px]">Real-time Live Capture</span>
                 </span>
                 <WebsiteScreenshot
                   domain={editForm.domain}
                   url={editForm.url || `https://${editForm.domain}`}
                   name={editForm.name || editForm.domain}
-                  previewImage={editForm.deploymentUrl}
                   aspectRatio="wide"
                   showBrowserBar={true}
                 />

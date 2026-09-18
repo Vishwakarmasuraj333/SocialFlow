@@ -25,7 +25,6 @@ const LOCAL_DOMAIN_PREVIEWS: Record<string, string> = {
   'tuvaa.com': '/previews/tuvaa.png',
   'tuvaa.vercel.app': '/previews/tuvaa.png',
   'fototrendz.com': '/previews/fototrendz.png',
-  'developers.pinterest.com': 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
 };
 
 function resolveWebsitePreview(domain: string, url?: string | null, previewImage?: string | null): string | null {
@@ -50,9 +49,6 @@ function resolveWebsitePreview(domain: string, url?: string | null, previewImage
   }
   if (clean.includes('fototrendz')) {
     return '/previews/fototrendz.png';
-  }
-  if (clean.includes('pinterest')) {
-    return 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80';
   }
 
   return null;
