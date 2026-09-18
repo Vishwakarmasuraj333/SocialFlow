@@ -79,40 +79,46 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const cleanDomain = domain.toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '').trim();
+    const cleanDomain = domain.toLowerCase().replace(/^(https?:\/\/)+/gi, '').replace(/\/.*$/, '').trim();
+    const cleanUrl = url.trim().replace(/^(https?:\/\/)+/gi, 'https://');
+    const cleanProdUrl = productionUrl ? productionUrl.trim().replace(/^(https?:\/\/)+/gi, 'https://') : cleanUrl;
+    const cleanStagingUrl = stagingUrl ? stagingUrl.trim().replace(/^(https?:\/\/)+/gi, 'https://') : null;
+    const cleanDevUrl = developmentUrl ? developmentUrl.trim().replace(/^(https?:\/\/)+/gi, 'https://') : null;
 
     const website = await prisma.website.create({
       data: {
         workspaceId: targetWorkspaceId,
         name: name.trim(),
         domain: cleanDomain,
-        url: url.trim(),
-        productionUrl: productionUrl?.trim() || url.trim(),
-        stagingUrl: stagingUrl?.trim() || null,
-        developmentUrl: developmentUrl?.trim() || null,
+        url: cleanUrl,
+        productionUrl: cleanProdUrl,
+        stagingUrl: cleanStagingUrl,
+        developmentUrl: cleanDevUrl,
         cms: cms || null,
         framework: framework || null,
         hostingProvider: hostingProvider || null,
         serverProvider: serverProvider || null,
         serverIp: serverIp?.trim() || null,
+        deploymentUrl: body.deploymentUrl?.trim() || null,
         sslStatus,
         sslExpiry: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // Default 90 days
         domainExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // Default 1 year
+        dnsProvider: hostingProvider || null,
         environment,
         status,
-        notes: notes || null,
+        notes: notes?.trim() || null,
         createdById: auth.user.id,
       },
     });
 
-    // Automatically create primary Domain entry for this website
+    // Auto-create primary domain entry
     await prisma.domain.create({
       data: {
         workspaceId: targetWorkspaceId,
         websiteId: website.id,
         domain: cleanDomain,
-        registrar: hostingProvider || 'Cloudflare',
-        dnsProvider: hostingProvider || 'Cloudflare',
+        dnsProvider: hostingProvider || 'Cloud Infrastructure',
+        registrar: hostingProvider || 'Cloud Infrastructure',
         sslStatus: 'ACTIVE',
         sslExpiry: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
         expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
@@ -151,6 +157,26 @@ export async function PATCH(req: NextRequest) {
 
     if (!id) {
       return NextResponse.json({ error: 'Website ID is required' }, { status: 400 });
+    }
+
+    // Sanitize URLs in updateData if provided
+    if (updateData.domain) {
+      updateData.domain = updateData.domain.toLowerCase().replace(/^(https?:\/\/)+/gi, '').replace(/\/.*$/, '').trim();
+    }
+    if (updateData.url) {
+      updateData.url = updateData.url.trim().replace(/^(https?:\/\/)+/gi, 'https://');
+    }
+    if (updateData.productionUrl) {
+      updateData.productionUrl = updateData.productionUrl.trim().replace(/^(https?:\/\/)+/gi, 'https://');
+    }
+    if (updateData.stagingUrl) {
+      updateData.stagingUrl = updateData.stagingUrl.trim().replace(/^(https?:\/\/)+/gi, 'https://');
+    }
+    if (updateData.developmentUrl) {
+      updateData.developmentUrl = updateData.developmentUrl.trim().replace(/^(https?:\/\/)+/gi, 'https://');
+    }
+    if (updateData.deploymentUrl !== undefined) {
+      updateData.deploymentUrl = updateData.deploymentUrl?.trim() || null;
     }
 
     const website = await prisma.website.update({

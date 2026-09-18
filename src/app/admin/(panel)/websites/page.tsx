@@ -26,59 +26,84 @@ import { WebsiteScreenshot } from '@/components/websites/website-screenshot';
 
 function detectInfrastructure(input: string) {
   const lower = (input || '').toLowerCase();
-  if (lower.includes('instagram.com')) {
+  if (lower.includes('socialflow') || lower.includes('zeta-one')) {
     return {
-      hosting: 'Meta Edge Infrastructure',
-      framework: 'React / Meta Core',
-      cms: 'Meta Web Core',
-      notes: '1.2B+ Daily Active Pages',
-    };
-  }
-  if (lower.includes('pinterest.com')) {
-    return {
-      hosting: 'AWS CloudFront / Fastly CDN',
-      framework: 'React / Python Core',
-      cms: 'Pinterest Pin Engine',
-      notes: '500M+ Visual Pins',
+      hosting: 'Vercel Production Edge',
+      framework: 'Next.js 16 / TypeScript',
+      cms: 'SocialFlow SaaS Engine',
+      notes: '18 Monitored Admin Routes',
+      preview: '/images/websites/socialflow-app.jpg',
     };
   }
   if (lower.includes('suraj') || lower.includes('animation') || lower.includes('portfolio')) {
     return {
       hosting: 'Vercel Production',
-      framework: 'Three.js / React 19 Animation',
-      cms: 'Portfolio WebGL Engine',
-      notes: '5 Interactive Pages',
+      framework: 'React 19 / Three.js WebGL',
+      cms: 'Creative Portfolio Studio',
+      notes: '5 Interactive Experiences',
+      preview: '/previews/suraj-portfolio.png',
     };
   }
-  if (lower.includes('socialflow') || lower.includes('vercel.app')) {
+  if (lower.includes('tuvaa')) {
     return {
       hosting: 'Vercel Edge Global',
-      framework: 'Next.js 15 / TypeScript',
-      cms: 'SocialFlow SaaS Engine',
-      notes: '18 Monitored Admin Routes',
+      framework: 'Next.js 16 / React',
+      cms: 'TUVAA Commerce Engine',
+      notes: 'Digital Products Platform',
+      preview: '/previews/tuvaa.png',
     };
   }
-  if (lower.includes('netlify.app')) {
+  if (lower.includes('fototrendz')) {
     return {
-      hosting: 'Netlify Global Edge',
-      framework: 'React / Jamstack',
-      cms: 'Netlify Static',
-      notes: '6 Monitored Pages',
+      hosting: 'Cloudflare Pages / Edge',
+      framework: 'React 19 / Vite',
+      cms: 'FotoTrendz Studio Engine',
+      notes: 'Visual Media Platform',
+      preview: '/previews/fototrendz.png',
+    };
+  }
+  if (lower.includes('pinterest')) {
+    return {
+      hosting: 'AWS CloudFront / Fastly CDN',
+      framework: 'React / Node.js Core',
+      cms: 'Pinterest Developer Engine',
+      notes: 'Official OAuth & Webhook Gateway',
+      preview: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
+    };
+  }
+  if (lower.includes('github.com')) {
+    return {
+      hosting: 'GitHub Enterprise Pages',
+      framework: 'TypeScript / React Core',
+      cms: 'Open Source Software',
+      notes: 'CI/CD Automated Deployments',
+      preview: '/images/websites/socialflow-app.jpg',
     };
   }
   if (lower.includes('cloudflare.com') || lower.includes('pages.dev')) {
     return {
       hosting: 'Cloudflare Pages / Edge',
       framework: 'Next.js / Edge Workers',
-      cms: 'Cloudflare Engine',
-      notes: '10 Monitored Endpoints',
+      cms: 'Cloudflare Serverless Engine',
+      notes: '10 Monitored Edge Endpoints',
+      preview: '',
+    };
+  }
+  if (lower.includes('netlify.app')) {
+    return {
+      hosting: 'Netlify Global Edge',
+      framework: 'React / Next.js Jamstack',
+      cms: 'Modern Cloud Architecture',
+      notes: '6 Monitored Pages',
+      preview: '',
     };
   }
   return {
-    hosting: 'Cloud Infrastructure',
-    framework: 'Modern Web Architecture',
-    cms: 'Production CMS',
-    notes: '8 Monitored Pages',
+    hosting: 'Vercel Edge Global',
+    framework: 'Next.js 16 / TypeScript',
+    cms: 'Production Web Platform',
+    notes: '12 Monitored Pages & APIs',
+    preview: '',
   };
 }
 
@@ -507,7 +532,7 @@ export default function AllWebsitesPage() {
                 required
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="e.g. SocialFlow Global App"
+                placeholder="e.g. SocialFlow Global App, Acme SaaS Portal"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
@@ -522,19 +547,21 @@ export default function AllWebsitesPage() {
                 value={form.domain}
                 onChange={(e) => {
                   const val = e.target.value;
-                  const detected = detectInfrastructure(val);
+                  const cleanDomain = val.replace(/^(https?:\/\/)+/gi, '').replace(/\/.*$/, '').trim();
+                  const detected = detectInfrastructure(cleanDomain);
                   setForm(prev => ({
                     ...prev,
-                    domain: val,
-                    url: prev.url ? prev.url : val ? `https://${val}` : '',
-                    name: prev.name ? prev.name : val.split('.')[0] ? val.split('.')[0] : '',
+                    domain: cleanDomain,
+                    url: cleanDomain ? `https://${cleanDomain}` : '',
+                    name: prev.name ? prev.name : cleanDomain.split('.')[0] ? cleanDomain.split('.')[0].replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : '',
                     hostingProvider: prev.hostingProvider ? prev.hostingProvider : detected.hosting,
                     framework: prev.framework ? prev.framework : detected.framework,
                     cms: prev.cms ? prev.cms : detected.cms,
                     notes: prev.notes ? prev.notes : detected.notes,
+                    deploymentUrl: prev.deploymentUrl ? prev.deploymentUrl : detected.preview,
                   }));
                 }}
-                placeholder="e.g. www.instagram.com, socialflow.io"
+                placeholder="e.g. socialflow.io, acme-app.com, myportfolio.vercel.app"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
@@ -549,17 +576,13 @@ export default function AllWebsitesPage() {
                 value={form.url}
                 onChange={(e) => {
                   const val = e.target.value;
-                  const detected = detectInfrastructure(val);
+                  const cleanUrl = val.trim().replace(/^(https?:\/\/)+/gi, 'https://');
                   setForm(prev => ({
                     ...prev,
-                    url: val,
-                    hostingProvider: prev.hostingProvider ? prev.hostingProvider : detected.hosting,
-                    framework: prev.framework ? prev.framework : detected.framework,
-                    cms: prev.cms ? prev.cms : detected.cms,
-                    notes: prev.notes ? prev.notes : detected.notes,
+                    url: cleanUrl,
                   }));
                 }}
-                placeholder="https://www.instagram.com/"
+                placeholder="https://socialflow-zeta-one.vercel.app"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
@@ -588,14 +611,13 @@ export default function AllWebsitesPage() {
                 type="text"
                 value={form.hostingProvider}
                 onChange={(e) => setForm({ ...form, hostingProvider: e.target.value })}
-                placeholder="Meta Edge, AWS, Vercel, Cloudflare"
+                placeholder="Vercel Production, AWS, Cloudflare"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
               <datalist id="hosting-providers-list">
-                <option value="Meta Edge Infrastructure" />
-                <option value="AWS CloudFront / Fastly CDN" />
-                <option value="Vercel Edge Global" />
                 <option value="Vercel Production" />
+                <option value="Vercel Edge Global" />
+                <option value="AWS CloudFront / S3" />
                 <option value="Cloudflare Pages / Edge" />
                 <option value="Google Cloud Platform (GCP)" />
                 <option value="Netlify Global Edge" />
@@ -612,18 +634,17 @@ export default function AllWebsitesPage() {
                 type="text"
                 value={form.framework}
                 onChange={(e) => setForm({ ...form, framework: e.target.value })}
-                placeholder="React / Meta Core, Next.js 15, Three.js"
+                placeholder="Next.js 16, React 19, Three.js WebGL"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
               <datalist id="frameworks-list">
-                <option value="React / Meta Core" />
-                <option value="React / Python Core" />
-                <option value="Next.js 15 / TypeScript" />
+                <option value="Next.js 16 / TypeScript" />
+                <option value="React 19 / TypeScript" />
                 <option value="Three.js / React 19 Animation" />
                 <option value="React SPA / Vite" />
                 <option value="Vue 3 / Nuxt Engine" />
                 <option value="Astro / Static Engine" />
-                <option value="WordPress / Headless PHP" />
+                <option value="Remix / React Router 7" />
               </datalist>
             </div>
 
@@ -635,7 +656,7 @@ export default function AllWebsitesPage() {
                 type="text"
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                placeholder="e.g. 12 Monitored Routes, 500M+ Pins"
+                placeholder="e.g. 18 Monitored Routes, Main App & API"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
@@ -653,6 +674,22 @@ export default function AllWebsitesPage() {
               />
             </div>
 
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                Visual Screenshot Asset / Preview Image URL (Optional)
+              </label>
+              <input
+                type="text"
+                value={form.deploymentUrl}
+                onChange={(e) => setForm({ ...form, deploymentUrl: e.target.value })}
+                placeholder="e.g. /previews/suraj-portfolio.png or /images/websites/socialflow-app.jpg"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-mono"
+              />
+              <p className="text-[10px] text-slate-400 mt-1">
+                Custom screenshot asset. Leave blank to automatically capture high-definition live preview from URL.
+              </p>
+            </div>
+
             {/* Real-time screenshot preview when typing domain/url */}
             {form.domain && form.domain.includes('.') && form.domain.length >= 4 && (
               <div className="sm:col-span-2 space-y-1.5 pt-1">
@@ -663,6 +700,7 @@ export default function AllWebsitesPage() {
                   domain={form.domain}
                   url={form.url || `https://${form.domain}`}
                   name={form.name || form.domain}
+                  previewImage={form.deploymentUrl}
                   aspectRatio="wide"
                   showBrowserBar={true}
                 />
@@ -736,7 +774,12 @@ export default function AllWebsitesPage() {
                 type="url"
                 required
                 value={editForm.url}
-                onChange={(e) => setEditForm({ ...editForm, url: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const cleanUrl = val.trim().replace(/^(https?:\/\/)+/gi, 'https://');
+                  setEditForm({ ...editForm, url: cleanUrl });
+                }}
+                placeholder="https://socialflow-zeta-one.vercel.app"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
@@ -765,7 +808,7 @@ export default function AllWebsitesPage() {
                 type="text"
                 value={editForm.hostingProvider}
                 onChange={(e) => setEditForm({ ...editForm, hostingProvider: e.target.value })}
-                placeholder="Meta Edge, AWS, Vercel, Cloudflare"
+                placeholder="Vercel Production, AWS, Cloudflare"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
@@ -778,7 +821,7 @@ export default function AllWebsitesPage() {
                 type="text"
                 value={editForm.cms}
                 onChange={(e) => setEditForm({ ...editForm, cms: e.target.value })}
-                placeholder="Next.js 16, MDX Engine"
+                placeholder="Next.js 16, App Router Engine"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
@@ -792,7 +835,7 @@ export default function AllWebsitesPage() {
                 type="text"
                 value={editForm.framework}
                 onChange={(e) => setEditForm({ ...editForm, framework: e.target.value })}
-                placeholder="React / Meta Core, Next.js 15, Three.js"
+                placeholder="Next.js 16, React 19, Three.js WebGL"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
@@ -805,23 +848,43 @@ export default function AllWebsitesPage() {
                 type="text"
                 value={editForm.notes}
                 onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                placeholder="e.g. 12 Monitored Routes, 1.2B+ Daily Pages"
+                placeholder="e.g. 18 Monitored Routes, Main App & API"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
 
             <div className="sm:col-span-2">
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Visual Screenshot Asset Path / URL
+                Visual Screenshot Asset / Preview Image URL (Optional)
               </label>
               <input
                 type="text"
                 value={editForm.deploymentUrl}
                 onChange={(e) => setEditForm({ ...editForm, deploymentUrl: e.target.value })}
-                placeholder="/images/websites/socialflow-app.jpg"
+                placeholder="e.g. /previews/suraj-portfolio.png, /images/websites/socialflow-app.jpg or https://..."
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-mono"
               />
+              <p className="text-[10px] text-slate-400 mt-1">
+                Custom screenshot asset. Leave blank to automatically capture high-definition live preview from URL.
+              </p>
             </div>
+
+            {/* Live Screenshot Preview */}
+            {editForm.domain && editForm.domain.includes('.') && (
+              <div className="sm:col-span-2 space-y-1.5 pt-1">
+                <span className="text-slate-400 text-[10px] uppercase font-semibold block">
+                  Live Screenshot Preview
+                </span>
+                <WebsiteScreenshot
+                  domain={editForm.domain}
+                  url={editForm.url || `https://${editForm.domain}`}
+                  name={editForm.name || editForm.domain}
+                  previewImage={editForm.deploymentUrl}
+                  aspectRatio="wide"
+                  showBrowserBar={true}
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">

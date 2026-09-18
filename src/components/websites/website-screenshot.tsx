@@ -14,12 +14,49 @@ interface WebsiteScreenshotProps {
   showBrowserBar?: boolean;
 }
 
-// Map known internal domains directly to generated real high-res preview assets
+// Map known internal and featured domains directly to generated real high-res preview assets
 const LOCAL_DOMAIN_PREVIEWS: Record<string, string> = {
   'socialflow.io': '/images/websites/socialflow-app.jpg',
+  'socialflow-zeta-one.vercel.app': '/images/websites/socialflow-app.jpg',
+  'app.socialflow.io': '/images/websites/socialflow-app.jpg',
   'blog.socialflow.io': '/images/websites/socialflow-blog.jpg',
   'docs.socialflow.io': '/images/websites/socialflow-docs.jpg',
+  'suraj-animation-portfolio.vercel.app': '/previews/suraj-portfolio.png',
+  'tuvaa.com': '/previews/tuvaa.png',
+  'tuvaa.vercel.app': '/previews/tuvaa.png',
+  'fototrendz.com': '/previews/fototrendz.png',
+  'developers.pinterest.com': 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
 };
+
+function resolveWebsitePreview(domain: string, url?: string | null, previewImage?: string | null): string | null {
+  if (previewImage && previewImage.trim()) {
+    return previewImage.trim();
+  }
+
+  const clean = (domain || '').toLowerCase().replace(/^(https?:\/\/)+/gi, '').replace(/\/.*$/, '').trim();
+  if (LOCAL_DOMAIN_PREVIEWS[clean]) {
+    return LOCAL_DOMAIN_PREVIEWS[clean];
+  }
+
+  // Dynamic heuristic matching for portfolio, socialflow, tuvaa, fototrendz
+  if (clean.includes('suraj') || clean.includes('animation') || clean.includes('portfolio')) {
+    return '/previews/suraj-portfolio.png';
+  }
+  if (clean.includes('socialflow') || clean.includes('zeta-one')) {
+    return '/images/websites/socialflow-app.jpg';
+  }
+  if (clean.includes('tuvaa')) {
+    return '/previews/tuvaa.png';
+  }
+  if (clean.includes('fototrendz')) {
+    return '/previews/fototrendz.png';
+  }
+  if (clean.includes('pinterest')) {
+    return 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80';
+  }
+
+  return null;
+}
 
 export function WebsiteScreenshot({
   url,
@@ -30,28 +67,34 @@ export function WebsiteScreenshot({
   aspectRatio = 'video',
   showBrowserBar = true,
 }: WebsiteScreenshotProps) {
-  const cleanDomain = (domain || '').trim().replace(/^https?:\/\//, '').replace(/\/$/, '');
-  const targetUrl = url && url.startsWith('http') ? url : `https://${cleanDomain}`;
+  const cleanDomain = (domain || '')
+    .trim()
+    .replace(/^(https?:\/\/)+/gi, '')
+    .replace(/\/.*$/, '');
+
+  let targetUrl = (url || `https://${cleanDomain}`).trim();
+  targetUrl = targetUrl.replace(/^(https?:\/\/)+/gi, '');
+  targetUrl = `https://${targetUrl}`;
 
   // Check if a direct local preview image is assigned or mapped
-  const initialImage = previewImage || LOCAL_DOMAIN_PREVIEWS[cleanDomain] || null;
+  const resolvedImg = resolveWebsitePreview(cleanDomain, targetUrl, previewImage);
 
-  const [activeImage, setActiveImage] = useState<string | null>(initialImage);
+  const [activeImage, setActiveImage] = useState<string | null>(resolvedImg);
   const [sourceIndex, setSourceIndex] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(!initialImage);
+  const [isLoading, setIsLoading] = useState<boolean>(!resolvedImg);
   const [hasFailedAll, setHasFailedAll] = useState<boolean>(false);
 
-  // Pure modern fallback sources (ZERO WordPress / s0.wp.com dependency)
+  // High-reliability modern screenshot sources
   const externalSources = [
-    `https://image.thum.io/get/width/800/crop/600/noanimate/${targetUrl}`,
-    `https://v1.screenshot.11ty.dev/${encodeURIComponent(targetUrl)}/opengraph/`,
     `https://api.microlink.io/?url=${encodeURIComponent(targetUrl)}&screenshot=true&meta=false&embed=screenshot.url`,
+    `https://v1.screenshot.11ty.dev/${encodeURIComponent(targetUrl)}/opengraph/`,
+    `https://image.thum.io/get/width/800/crop/600/noanimate/${targetUrl}`,
   ];
 
   useEffect(() => {
-    const directImg = previewImage || LOCAL_DOMAIN_PREVIEWS[cleanDomain] || null;
-    if (directImg) {
-      setActiveImage(directImg);
+    const direct = resolveWebsitePreview(cleanDomain, targetUrl, previewImage);
+    if (direct) {
+      setActiveImage(direct);
       setIsLoading(false);
       setHasFailedAll(false);
     } else {
@@ -68,8 +111,7 @@ export function WebsiteScreenshot({
   }, [cleanDomain, targetUrl, previewImage]);
 
   const handleImageError = () => {
-    // If a direct local image fails, fall through to external sources
-    if (activeImage && activeImage.startsWith('/images/')) {
+    if (activeImage && (activeImage.startsWith('/images/') || activeImage.startsWith('/previews/'))) {
       setActiveImage(externalSources[0]);
       setSourceIndex(0);
       return;
