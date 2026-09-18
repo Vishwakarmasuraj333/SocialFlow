@@ -14,32 +14,12 @@ interface WebsiteScreenshotProps {
   showBrowserBar?: boolean;
 }
 
-// Map internal SocialFlow app domains directly to high-resolution local preview asset
-const LOCAL_DOMAIN_PREVIEWS: Record<string, string> = {
-  'socialflow.io': '/images/websites/socialflow-app.jpg',
-  'socialflow-zeta-one.vercel.app': '/images/websites/socialflow-app.jpg',
-  'app.socialflow.io': '/images/websites/socialflow-app.jpg',
-  'blog.socialflow.io': '/images/websites/socialflow-blog.jpg',
-  'docs.socialflow.io': '/images/websites/socialflow-docs.jpg',
-};
-
 function resolveWebsitePreview(domain: string, url?: string | null, previewImage?: string | null): string | null {
-  // Discard any legacy fake Unsplash stock placeholder images
-  if (previewImage && previewImage.trim() && !previewImage.includes('unsplash.com')) {
+  // Only use previewImage if explicitly an external custom screenshot URL (and not fake unsplash or static local)
+  if (previewImage && previewImage.trim().startsWith('http') && !previewImage.includes('unsplash.com')) {
     return previewImage.trim();
   }
-
-  const clean = (domain || '').toLowerCase().replace(/^(https?:\/\/)+/gi, '').replace(/\/.*$/, '').trim();
-  if (LOCAL_DOMAIN_PREVIEWS[clean]) {
-    return LOCAL_DOMAIN_PREVIEWS[clean];
-  }
-
-  // Exact match for SocialFlow internal app
-  if (clean.includes('socialflow') || clean.includes('zeta-one')) {
-    return '/images/websites/socialflow-app.jpg';
-  }
-
-  // For any other link/domain, return null so it captures the 100% REAL LIVE website screenshot
+  // Always return null so real live headless browser screenshot capture is used for any website
   return null;
 }
 

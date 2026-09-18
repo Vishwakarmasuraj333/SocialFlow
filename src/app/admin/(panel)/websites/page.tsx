@@ -28,11 +28,11 @@ function detectInfrastructure(input: string) {
   const lower = (input || '').toLowerCase();
   if (lower.includes('socialflow') || lower.includes('zeta-one')) {
     return {
-      hosting: 'Vercel Production Edge',
-      framework: 'Next.js 16 / TypeScript',
+      hosting: 'Vercel Edge Global',
+      framework: 'React 19 / Next.js',
       cms: 'SocialFlow SaaS Engine',
-      notes: '18 Monitored Admin Routes',
-      preview: '/images/websites/socialflow-app.jpg',
+      notes: '18 Monitored Admin Routes, Main App & API',
+      preview: '',
     };
   }
   if (lower.includes('portfolio') || lower.includes('agency')) {

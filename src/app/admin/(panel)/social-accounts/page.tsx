@@ -608,11 +608,22 @@ export default function AdminSocialAccountsPage() {
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-3">
                             <div className="relative shrink-0">
-                              <img
-                                src={acc.avatarUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(acc.accountHandle || acc.id)}`}
-                                alt={acc.accountName}
-                                className="w-9 h-9 rounded-xl object-cover border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800"
-                              />
+                              {acc.avatarUrl ? (
+                                <img
+                                  src={acc.avatarUrl}
+                                  alt={acc.accountName}
+                                  className="w-9 h-9 rounded-xl object-cover border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800"
+                                />
+                              ) : (
+                                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-slate-800 flex items-center justify-center text-white font-bold text-xs shadow-inner border border-slate-200 dark:border-slate-700">
+                                  {(acc.accountName || 'A')
+                                    .split(' ')
+                                    .map((n: string) => n[0])
+                                    .join('')
+                                    .slice(0, 2)
+                                    .toUpperCase() || 'SA'}
+                                </div>
+                              )}
                               <div className="absolute -bottom-1 -right-1 p-0.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                                 <SocialPlatformIcon platform={acc.platform.toLowerCase()} size="xs" />
                               </div>
@@ -657,6 +668,15 @@ export default function AdminSocialAccountsPage() {
 
                         <td className="px-4 py-3.5 text-right">
                           <div className="flex items-center justify-end gap-1">
+                            {acc.platform === 'LINKEDIN' && (
+                              <Link
+                                href="/admin/social/linkedin"
+                                className="p-1.5 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
+                                title="Open Dedicated LinkedIn Console"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </Link>
+                            )}
                             <button
                               type="button"
                               onClick={() => setViewAccount(acc)}
