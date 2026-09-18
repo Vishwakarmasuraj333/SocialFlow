@@ -27,8 +27,8 @@ function AdminLoginForm() {
   const redirectUrl = searchParams.get('redirect') || '/admin';
   const urlError = searchParams.get('error');
 
-  // Form state
-  const [email, setEmail] = useState('itxsurajofficial@gmail.com');
+  // Form state (Unfilled so admin enters their own credentials)
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -41,7 +41,7 @@ function AdminLoginForm() {
 
   // Forgot Password Modal state
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState('itxsurajofficial@gmail.com');
+  const [forgotEmail, setForgotEmail] = useState('');
   const [isForgotLoading, setIsForgotLoading] = useState(false);
   const [forgotSuccess, setForgotSuccess] = useState(false);
   const [resetToken, setResetToken] = useState<string | null>(null);
@@ -89,7 +89,12 @@ function AdminLoginForm() {
     e.preventDefault();
     setIsForgotLoading(true);
     try {
-      const targetEmail = (forgotEmail || email || 'itxsurajofficial@gmail.com').trim();
+      const targetEmail = (forgotEmail || email).trim();
+      if (!targetEmail) {
+        showToast('Please enter your administrator email address', 'error');
+        setIsForgotLoading(false);
+        return;
+      }
       const res = await fetch('/api/admin/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -135,7 +140,7 @@ function AdminLoginForm() {
       const data = await res.json();
       if (res.ok) {
         showToast('Password updated! You can now sign in immediately.', 'success');
-        setEmail(forgotEmail || email || 'itxsurajofficial@gmail.com');
+        setEmail(forgotEmail || email);
         setPassword(newPassword);
         setIsForgotModalOpen(false);
         setForgotSuccess(false);
@@ -215,7 +220,7 @@ function AdminLoginForm() {
                   setEmail(e.target.value);
                   if (error && urlError !== 'forbidden') setError(null);
                 }}
-                placeholder="itxsurajofficial@gmail.com"
+                placeholder="admin@yourdomain.com"
                 aria-invalid={!!error}
                 aria-describedby={error ? 'login-error-msg' : undefined}
                 className="block w-full pl-10 pr-3.5 py-2.5 text-sm bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 transition-colors font-medium"
@@ -246,7 +251,7 @@ function AdminLoginForm() {
                   setPassword(e.target.value);
                   if (error && urlError !== 'forbidden') setError(null);
                 }}
-                placeholder="••••••••••••"
+                placeholder="Enter your administrator password"
                 aria-invalid={!!error}
                 aria-describedby={error ? 'login-error-msg' : undefined}
                 className="block w-full pl-10 pr-11 py-2.5 text-sm bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 transition-colors tracking-widest"
@@ -279,7 +284,7 @@ function AdminLoginForm() {
             <button
               type="button"
               onClick={() => {
-                setForgotEmail(email || 'itxsurajofficial@gmail.com');
+                setForgotEmail(email);
                 setIsForgotModalOpen(true);
               }}
               className="text-xs font-medium text-slate-400 hover:text-indigo-400 transition-colors cursor-pointer underline-offset-4 hover:underline"
