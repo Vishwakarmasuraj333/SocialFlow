@@ -421,10 +421,10 @@ export default function DomainsManagementPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
             <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 space-y-2">
               <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                Move to Archive
+                Move to Trash
               </span>
               <p className="text-[11px] text-slate-500">
-                Recoverable at any time from Central Trash.
+                Soft-delete domain. Recoverable at any time from Central Trash.
               </p>
               <Button
                 variant="outline"
@@ -433,16 +433,16 @@ export default function DomainsManagementPage() {
                 onClick={() => handleDeleteDomain(false)}
                 className="w-full text-xs font-semibold rounded-lg"
               >
-                Archive Domain
+                Move to Trash
               </Button>
             </div>
 
             <div className="p-3.5 rounded-xl border border-rose-300 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/20 space-y-2">
               <span className="text-xs font-bold text-rose-600 dark:text-rose-400">
-                Real Delete (Permanent)
+                Permanent Deletion
               </span>
               <p className="text-[11px] text-rose-700/80 dark:text-rose-300/80">
-                Permanently purge domain and all associated DNS records.
+                Irrevocably purge domain and all associated DNS records from the database.
               </p>
               <Button
                 variant="destructive"
@@ -451,7 +451,7 @@ export default function DomainsManagementPage() {
                 onClick={() => handleDeleteDomain(true)}
                 className="w-full text-xs font-bold rounded-lg"
               >
-                Delete Forever
+                Delete Permanently
               </Button>
             </div>
           </div>
@@ -479,17 +479,17 @@ export default function DomainsManagementPage() {
           <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-xl text-amber-800 dark:text-amber-200">
             <p className="font-semibold mb-1">Bulk Domain Removal</p>
             <p className="text-[11px] leading-relaxed">
-              You have selected <strong>{selectedDomainIds.length}</strong> domain(s). Choose whether to archive them (recoverable from central trash) or permanently purge them from the database.
+              You have selected <strong>{selectedDomainIds.length}</strong> domain(s). Choose whether to move them to trash (recoverable anytime) or permanently purge them from the database.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
             <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 space-y-2">
               <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                Move to Archive
+                Move to Trash
               </span>
               <p className="text-[11px] text-slate-500">
-                Archive all {selectedDomainIds.length} domains. Can be restored anytime.
+                Move all {selectedDomainIds.length} domains to Trash. Can be restored anytime.
               </p>
               <Button
                 variant="outline"
@@ -498,16 +498,16 @@ export default function DomainsManagementPage() {
                 onClick={() => handleBulkDeleteDomains(false)}
                 className="w-full text-xs font-semibold rounded-lg"
               >
-                Archive Selected ({selectedDomainIds.length})
+                Move to Trash ({selectedDomainIds.length})
               </Button>
             </div>
 
             <div className="p-3.5 rounded-xl border border-rose-300 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/20 space-y-2">
               <span className="text-xs font-bold text-rose-600 dark:text-rose-400">
-                Real Delete (Permanent)
+                Permanent Deletion
               </span>
               <p className="text-[11px] text-rose-700/80 dark:text-rose-300/80">
-                Permanently purge all selected domains and associated DNS records.
+                Irrevocably purge all selected domains and associated DNS records.
               </p>
               <Button
                 variant="destructive"
@@ -516,7 +516,7 @@ export default function DomainsManagementPage() {
                 onClick={() => handleBulkDeleteDomains(true)}
                 className="w-full text-xs font-bold rounded-lg"
               >
-                Delete Forever ({selectedDomainIds.length})
+                Delete Permanently ({selectedDomainIds.length})
               </Button>
             </div>
           </div>

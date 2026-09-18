@@ -321,7 +321,7 @@ export default function TrashPage() {
               className="h-8 text-xs font-bold rounded-xl"
             >
               <Trash2 className="h-3.5 w-3.5 mr-1" />
-              Real Delete Selected (Permanent)
+              Delete Permanently ({selectedPostIds.length})
             </Button>
           </div>
         </div>

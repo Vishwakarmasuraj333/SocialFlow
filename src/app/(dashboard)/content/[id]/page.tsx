@@ -274,12 +274,12 @@ export default function PostDetailPage() {
               </Button>
             </div>
 
-            {/* Option 2: Permanent Real Delete */}
+            {/* Option 2: Permanent Deletion */}
             <div className="p-4 rounded-xl border border-rose-300 dark:border-rose-900/60 bg-rose-50/60 dark:bg-rose-950/20 flex flex-col justify-between space-y-3">
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-rose-600 dark:text-rose-400">
                   <AlertTriangle className="w-4 h-4" />
-                  <span>Real Delete (Permanent)</span>
+                  <span>Permanent Deletion</span>
                 </div>
                 <p className="text-[11px] text-rose-700/90 dark:text-rose-300/80 leading-relaxed">
                   Immediately and completely purges the post and all its delivery records from the database. Irreversible.
@@ -292,7 +292,7 @@ export default function PostDetailPage() {
                 onClick={() => handleDeletePost(true)}
                 className="w-full text-xs font-bold rounded-lg shadow-sm"
               >
-                Real Delete Now
+                Delete Permanently
               </Button>
             </div>
           </div>

@@ -556,10 +556,10 @@ export default function BusinessLocationsPage() {
 
             <div className="p-3.5 rounded-xl border border-rose-300 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/20 space-y-2">
               <span className="text-xs font-bold text-rose-600 dark:text-rose-400">
-                Real Delete (Permanent)
+                Permanent Deletion
               </span>
               <p className="text-[11px] text-rose-700/80 dark:text-rose-300/80">
-                Purge from database forever. Cannot be undone.
+                Irrevocably purge location from database. Cannot be undone.
               </p>
               <Button
                 variant="destructive"
@@ -568,7 +568,7 @@ export default function BusinessLocationsPage() {
                 onClick={() => handleDelete(true)}
                 className="w-full text-xs font-bold rounded-lg"
               >
-                Delete Forever
+                Delete Permanently
               </Button>
             </div>
           </div>
