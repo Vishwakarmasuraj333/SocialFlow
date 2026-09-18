@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { getAuthContext, signSessionToken, SESSION_COOKIE_NAME } from '@/lib/auth';
 import prisma from '@/lib/db';
+import { uploadBufferToCloudinary, isCloudinaryConfigured } from '@/lib/cloudinary';
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -41,35 +42,23 @@ export async function POST(req: NextRequest) {
 
     let avatarUrl: string;
 
-    // In serverless / Vercel environments, the filesystem (/var/task) is read-only (EROFS).
-    // Attempt local storage first; if read-only, seamlessly persist as an optimized Base64 Data URI.
-    try {
-      const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'avatars');
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
+    // Upload directly to Cloudinary for permanent, high-speed CDN delivery
+    if (isCloudinaryConfigured()) {
+      try {
+        const uploadResult = await uploadBufferToCloudinary(buffer, {
+          filename,
+          folder: 'avatars',
+          mimeType: file.type,
+          tags: ['admin', 'avatar', auth.user.id],
+        });
+        avatarUrl = uploadResult.secure_url;
+      } catch (cloudErr: any) {
+        console.error('Cloudinary upload error, falling back to base64:', cloudErr);
+        const base64Data = buffer.toString('base64');
+        avatarUrl = `data:${file.type};base64,${base64Data}`;
       }
-      const filePath = path.join(uploadsDir, filename);
-      await fs.promises.writeFile(filePath, buffer);
-      avatarUrl = `/uploads/avatars/${filename}`;
-
-      // Remove previous uploaded file if it was a local file
-      const currentUser = await prisma.user.findUnique({
-        where: { id: auth.user.id },
-        select: { avatarUrl: true },
-      });
-
-      if (currentUser?.avatarUrl?.startsWith('/uploads/avatars/')) {
-        const oldPath = path.join(process.cwd(), 'public', currentUser.avatarUrl);
-        if (fs.existsSync(oldPath) && oldPath !== filePath) {
-          try {
-            await fs.promises.unlink(oldPath);
-          } catch {
-            // ignore cleanup errors
-          }
-        }
-      }
-    } catch (fsErr: any) {
-      // Graceful fallback for Vercel / serverless read-only filesystems (EROFS)
+    } else {
+      // Fallback Data URI if Cloudinary keys not in environment
       const base64Data = buffer.toString('base64');
       avatarUrl = `data:${file.type};base64,${base64Data}`;
     }
@@ -157,19 +146,7 @@ export async function DELETE(req: NextRequest) {
       select: { avatarUrl: true },
     });
 
-    // Remove local file if present
-    if (currentUser?.avatarUrl?.startsWith('/uploads/avatars/')) {
-      const oldPath = path.join(process.cwd(), 'public', currentUser.avatarUrl);
-      if (fs.existsSync(oldPath)) {
-        try {
-          await fs.promises.unlink(oldPath);
-        } catch {
-          // ignore cleanup errors
-        }
-      }
-    }
-
-    // Set avatarUrl to null in DB
+    // Reset avatarUrl to null in DB
     const updatedUser = await prisma.user.update({
       where: { id: auth.user.id },
       data: { avatarUrl: null },

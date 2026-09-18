@@ -32,41 +32,41 @@ function detectInfrastructure(input: string) {
       framework: 'Next.js 16 / TypeScript',
       cms: 'SocialFlow SaaS Engine',
       notes: '18 Monitored Admin Routes',
-      preview: '/images/websites/socialflow-app.jpg',
+      preview: '',
     };
   }
-  if (lower.includes('suraj') || lower.includes('animation') || lower.includes('portfolio')) {
+  if (lower.includes('portfolio') || lower.includes('agency')) {
     return {
       hosting: 'Vercel Production',
-      framework: 'React 19 / Three.js WebGL',
-      cms: 'Creative Portfolio Studio',
-      notes: '5 Interactive Experiences',
-      preview: '/previews/suraj-portfolio.png',
+      framework: 'Next.js 16 / React 19',
+      cms: 'Creative Agency Studio',
+      notes: 'Monitored Client Experiences',
+      preview: '',
     };
   }
-  if (lower.includes('tuvaa')) {
+  if (lower.includes('tuvaa') || lower.includes('shop') || lower.includes('store')) {
     return {
       hosting: 'Vercel Edge Global',
       framework: 'Next.js 16 / React',
-      cms: 'TUVAA Commerce Engine',
-      notes: 'Digital Products Platform',
-      preview: '/previews/tuvaa.png',
+      cms: 'Commerce Cloud Engine',
+      notes: 'Digital Commerce Platform',
+      preview: '',
     };
   }
-  if (lower.includes('fototrendz')) {
+  if (lower.includes('media') || lower.includes('trend')) {
     return {
       hosting: 'Cloudflare Pages / Edge',
       framework: 'React 19 / Vite',
-      cms: 'FotoTrendz Studio Engine',
-      notes: 'Visual Media Platform',
-      preview: '/previews/fototrendz.png',
+      cms: 'Visual Media Platform',
+      notes: 'High-Bitrate Media Gateway',
+      preview: '',
     };
   }
   if (lower.includes('pinterest')) {
     return {
       hosting: 'AWS CloudFront / Fastly CDN',
       framework: 'React / Node.js Core',
-      cms: 'Pinterest Developer Engine',
+      cms: 'Developer Web Platform',
       notes: 'Official OAuth & Webhook Gateway',
       preview: '',
     };
@@ -77,7 +77,7 @@ function detectInfrastructure(input: string) {
       framework: 'TypeScript / React Core',
       cms: 'Open Source Software',
       notes: 'CI/CD Automated Deployments',
-      preview: '/images/websites/socialflow-app.jpg',
+      preview: '',
     };
   }
   if (lower.includes('cloudflare.com') || lower.includes('pages.dev')) {

@@ -14,43 +14,11 @@ interface WebsiteScreenshotProps {
   showBrowserBar?: boolean;
 }
 
-// Map known internal and featured domains directly to generated real high-res preview assets
-const LOCAL_DOMAIN_PREVIEWS: Record<string, string> = {
-  'socialflow.io': '/images/websites/socialflow-app.jpg',
-  'socialflow-zeta-one.vercel.app': '/images/websites/socialflow-app.jpg',
-  'app.socialflow.io': '/images/websites/socialflow-app.jpg',
-  'blog.socialflow.io': '/images/websites/socialflow-blog.jpg',
-  'docs.socialflow.io': '/images/websites/socialflow-docs.jpg',
-  'suraj-animation-portfolio.vercel.app': '/previews/suraj-portfolio.png',
-  'tuvaa.com': '/previews/tuvaa.png',
-  'tuvaa.vercel.app': '/previews/tuvaa.png',
-  'fototrendz.com': '/previews/fototrendz.png',
-};
-
 function resolveWebsitePreview(domain: string, url?: string | null, previewImage?: string | null): string | null {
-  if (previewImage && previewImage.trim()) {
+  // Only use explicitly provided custom remote URLs (e.g. Cloudinary / S3 uploaded images)
+  if (previewImage && previewImage.trim() && (previewImage.startsWith('http://') || previewImage.startsWith('https://'))) {
     return previewImage.trim();
   }
-
-  const clean = (domain || '').toLowerCase().replace(/^(https?:\/\/)+/gi, '').replace(/\/.*$/, '').trim();
-  if (LOCAL_DOMAIN_PREVIEWS[clean]) {
-    return LOCAL_DOMAIN_PREVIEWS[clean];
-  }
-
-  // Dynamic heuristic matching for portfolio, socialflow, tuvaa, fototrendz
-  if (clean.includes('suraj') || clean.includes('animation') || clean.includes('portfolio')) {
-    return '/previews/suraj-portfolio.png';
-  }
-  if (clean.includes('socialflow') || clean.includes('zeta-one')) {
-    return '/images/websites/socialflow-app.jpg';
-  }
-  if (clean.includes('tuvaa')) {
-    return '/previews/tuvaa.png';
-  }
-  if (clean.includes('fototrendz')) {
-    return '/previews/fototrendz.png';
-  }
-
   return null;
 }
 
@@ -72,29 +40,31 @@ export function WebsiteScreenshot({
   targetUrl = targetUrl.replace(/^(https?:\/\/)+/gi, '');
   targetUrl = `https://${targetUrl}`;
 
-  // Check if a direct local preview image is assigned or mapped
-  const resolvedImg = resolveWebsitePreview(cleanDomain, targetUrl, previewImage);
+  // Check if a direct custom remote preview image was uploaded
+  const customImg = resolveWebsitePreview(cleanDomain, targetUrl, previewImage);
 
-  const [activeImage, setActiveImage] = useState<string | null>(resolvedImg);
-  const [sourceIndex, setSourceIndex] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(!resolvedImg);
-  const [hasFailedAll, setHasFailedAll] = useState<boolean>(false);
-
-  // High-reliability modern screenshot sources
-  const externalSources = [
+  // High-reliability live real-time screenshot capture services
+  const liveScreenshotSources = [
+    `https://image.thum.io/get/width/1200/crop/800/noanimate/${targetUrl}`,
+    `https://s0.wp.com/mshots/v1/${encodeURIComponent(targetUrl)}?w=1200`,
     `https://api.microlink.io/?url=${encodeURIComponent(targetUrl)}&screenshot=true&meta=false&embed=screenshot.url`,
-    `https://v1.screenshot.11ty.dev/${encodeURIComponent(targetUrl)}/opengraph/`,
-    `https://image.thum.io/get/width/800/crop/600/noanimate/${targetUrl}`,
   ];
 
+  const initialImage = customImg || liveScreenshotSources[0];
+
+  const [activeImage, setActiveImage] = useState<string | null>(initialImage);
+  const [sourceIndex, setSourceIndex] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(!customImg);
+  const [hasFailedAll, setHasFailedAll] = useState<boolean>(false);
+
   useEffect(() => {
-    const direct = resolveWebsitePreview(cleanDomain, targetUrl, previewImage);
-    if (direct) {
-      setActiveImage(direct);
+    const custom = resolveWebsitePreview(cleanDomain, targetUrl, previewImage);
+    if (custom) {
+      setActiveImage(custom);
       setIsLoading(false);
       setHasFailedAll(false);
     } else {
-      setActiveImage(externalSources[0]);
+      setActiveImage(liveScreenshotSources[0]);
       setSourceIndex(0);
       setIsLoading(true);
       setHasFailedAll(false);
@@ -107,16 +77,10 @@ export function WebsiteScreenshot({
   }, [cleanDomain, targetUrl, previewImage]);
 
   const handleImageError = () => {
-    if (activeImage && (activeImage.startsWith('/images/') || activeImage.startsWith('/previews/'))) {
-      setActiveImage(externalSources[0]);
-      setSourceIndex(0);
-      return;
-    }
-
-    if (sourceIndex < externalSources.length - 1) {
+    if (sourceIndex < liveScreenshotSources.length - 1) {
       const nextIndex = sourceIndex + 1;
       setSourceIndex(nextIndex);
-      setActiveImage(externalSources[nextIndex]);
+      setActiveImage(liveScreenshotSources[nextIndex]);
     } else {
       setHasFailedAll(true);
       setIsLoading(false);

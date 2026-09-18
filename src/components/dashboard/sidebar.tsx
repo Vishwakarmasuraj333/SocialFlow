@@ -37,6 +37,7 @@ import {
   PanelLeftOpen,
   ChevronsLeft,
   ChevronsRight,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SocialFlowLogo } from '@/components/brand/logo';
@@ -334,6 +335,19 @@ export function Sidebar({
               </div>
             )}
           </Link>
+
+          {/* Explicit Mobile 'X' Close Button */}
+          {onCloseMobile && (
+            <button
+              type="button"
+              onClick={onCloseMobile}
+              aria-label="Close navigation menu"
+              title="Close menu"
+              className="md:hidden p-1.5 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100/80 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition-all cursor-pointer active:scale-95 shadow-2xs"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
         {/* Mode Switcher Segmented Control */}
