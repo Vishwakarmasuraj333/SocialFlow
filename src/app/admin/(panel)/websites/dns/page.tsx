@@ -452,19 +452,38 @@ function DnsContent() {
       <Modal
         isOpen={Boolean(recordToDelete)}
         onClose={() => !isProcessing && setRecordToDelete(null)}
-        title="Delete DNS Record?"
-        description="This action will permanently purge this DNS record from the active zone."
+        title="Remove DNS Record"
+        description="Are you sure you want to remove this record from the active zone?"
         maxWidth="md"
       >
-        <div className="space-y-4 pt-2">
-          <div className="p-3.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/20 text-xs text-rose-700 dark:text-rose-400 flex items-start gap-2.5">
-            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-            <div>
-              <span className="font-bold">Permanent Zone Deletion</span>
-              <p className="text-[11px] leading-relaxed mt-1">
-                Purging: <b>{recordToDelete?.type}</b> record for <b>{recordToDelete?.name}</b> ({recordToDelete?.content}).
-              </p>
+        <div className="space-y-4 pt-2 text-xs">
+          {/* Record Details Card */}
+          <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Record Type</span>
+              <span className="px-2 py-0.5 rounded-md font-mono font-bold text-xs bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900/40">
+                {recordToDelete?.type}
+              </span>
             </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Host / Name</span>
+              <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
+                {recordToDelete?.name}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Target Value</span>
+              <span className="font-mono text-slate-600 dark:text-slate-400 truncate max-w-[240px]">
+                {recordToDelete?.content}
+              </span>
+            </div>
+          </div>
+
+          <div className="p-3 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/40 dark:bg-rose-950/20 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2.5">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
+            <p className="text-[11px] leading-relaxed">
+              Traffic routed through this DNS record will immediately cease resolving across public nameservers upon removal.
+            </p>
           </div>
 
           <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
@@ -473,6 +492,7 @@ function DnsContent() {
               size="sm"
               disabled={isProcessing}
               onClick={() => setRecordToDelete(null)}
+              className="rounded-xl text-xs font-semibold"
             >
               Cancel
             </Button>
@@ -481,9 +501,9 @@ function DnsContent() {
               size="sm"
               isLoading={isProcessing}
               onClick={handleDeleteRecord}
-              className="rounded-xl font-bold"
+              className="rounded-xl text-xs font-bold shadow-sm"
             >
-              Purge DNS Record
+              Delete Record
             </Button>
           </div>
         </div>

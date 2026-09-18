@@ -701,21 +701,36 @@ export default function PostsView() {
 
             {/* Error Message if Failed */}
             {selectedPostDetails.errorMessage && (
-              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-xs text-rose-700 dark:text-rose-300 space-y-1">
-                <span className="font-bold flex items-center gap-1.5">
-                  <AlertTriangle className="w-3.5 h-3.5" /> API Error Details
+              <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-xs text-rose-700 dark:text-rose-300 space-y-1.5">
+                <span className="font-bold flex items-center gap-1.5 text-xs">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-rose-600 dark:text-rose-400" /> Platform API Response
                 </span>
-                <p className="font-mono text-[11px]">{selectedPostDetails.errorMessage}</p>
+                <p className="font-mono text-[11px] bg-white/60 dark:bg-black/30 p-2 rounded-lg border border-rose-200/60 dark:border-rose-900/40">{selectedPostDetails.errorMessage}</p>
+                {selectedPostDetails.errorMessage.toLowerCase().includes('token') && (
+                  <p className="text-[10px] text-rose-600 dark:text-rose-400 leading-normal">
+                    💡 <b>Resolution:</b> The destination platform rejected this request because the channel token is unverified or expired. Re-authenticate via Official Social Accounts or configure API credentials.
+                  </p>
+                )}
               </div>
             )}
 
             {/* Timestamps */}
-            <div className="grid grid-cols-2 gap-2 text-slate-500 font-mono text-[10px]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-500 font-mono text-[10px]">
               <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                Created: {new Date(selectedPostDetails.createdAt).toLocaleString()}
+                <span className="block text-[9px] uppercase font-bold text-slate-400 font-sans mb-0.5">Created At</span>
+                {new Date(selectedPostDetails.createdAt).toLocaleString()}
               </div>
               <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                Scheduled / Published: {selectedPostDetails.publishedAt ? new Date(selectedPostDetails.publishedAt).toLocaleString() : selectedPostDetails.scheduledAt ? new Date(selectedPostDetails.scheduledAt).toLocaleString() : 'Not set'}
+                <span className="block text-[9px] uppercase font-bold text-slate-400 font-sans mb-0.5">
+                  {selectedPostDetails.publishedAt ? 'Published At' : selectedPostDetails.scheduledAt ? 'Scheduled For' : 'Dispatch Timing'}
+                </span>
+                {selectedPostDetails.publishedAt
+                  ? new Date(selectedPostDetails.publishedAt).toLocaleString()
+                  : selectedPostDetails.scheduledAt
+                  ? new Date(selectedPostDetails.scheduledAt).toLocaleString()
+                  : selectedPostDetails.status === 'FAILED'
+                  ? `Immediate Dispatch (Attempted ${new Date(selectedPostDetails.updatedAt || selectedPostDetails.createdAt).toLocaleTimeString()})`
+                  : 'Immediate Dispatch'}
               </div>
             </div>
 
