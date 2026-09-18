@@ -24,6 +24,7 @@ import {
   ChevronDown,
   ChevronUp,
   EyeOff,
+  Globe,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -85,36 +86,35 @@ export default function AdminSocialAccountsPage() {
   const [copiedCallback, setCopiedCallback] = useState<boolean>(false);
   const [accountHandle, setAccountHandle] = useState<string>('');
   const [accountName, setAccountName] = useState<string>('');
-  const [connectMethod, setConnectMethod] = useState<'instant' | 'oauth'>('instant');
 
   const getHandlePlaceholder = (slug: string) => {
     switch (slug) {
-      case 'instagram': return 'itxsurajofficial';
-      case 'facebook': return 'socialflow.official';
-      case 'linkedin': return 'suraj-vishwakarma';
-      case 'x': return 'itxsuraj';
-      case 'youtube': return 'SurajOfficial';
-      case 'tiktok': return 'suraj.creations';
-      case 'pinterest': return 'surajpins';
-      case 'threads': return 'itxsurajofficial';
-      case 'twitch': return 'surajlive';
-      case 'reddit': return 'u/suraj_official';
-      case 'discord': return 'socialflow-hub';
-      case 'telegram': return 'suraj_broadcast';
-      case 'whatsapp': return '+919876543210';
-      default: return `${slug}_creator`;
+      case 'instagram': return 'yourbrand';
+      case 'facebook': return 'yourbrand.official';
+      case 'linkedin': return 'yourbrand-company';
+      case 'x': return 'YourBrandHQ';
+      case 'youtube': return 'YourBrandMedia';
+      case 'tiktok': return 'yourbrand_official';
+      case 'pinterest': return 'yourbrandpins';
+      case 'threads': return 'yourbrand';
+      case 'twitch': return 'yourbrandlive';
+      case 'reddit': return 'u/yourbrand_hq';
+      case 'discord': return 'yourbrand-community';
+      case 'telegram': return 'yourbrand_channel';
+      case 'whatsapp': return '+1 555 019 2834';
+      default: return `${slug}_official`;
     }
   };
 
   const getNamePlaceholder = (slug: string, platName: string) => {
     switch (slug) {
-      case 'instagram': return 'Suraj Vishwakarma';
-      case 'facebook': return 'SocialFlow Official Page';
-      case 'linkedin': return 'Suraj Vishwakarma (Creator)';
-      case 'x': return 'Suraj Vishwakarma';
-      case 'youtube': return 'Suraj Tech & Media';
-      case 'tiktok': return 'Suraj Creative Studio';
-      case 'twitch': return 'Suraj Live Streams';
+      case 'instagram': return 'Your Brand Official';
+      case 'facebook': return 'Your Brand Enterprise';
+      case 'linkedin': return 'Your Brand Corporation';
+      case 'x': return 'Your Brand HQ';
+      case 'youtube': return 'Your Brand Media';
+      case 'tiktok': return 'Your Brand Studio';
+      case 'twitch': return 'Your Brand Live';
       default: return `${platName} Official Channel`;
     }
   };
@@ -232,72 +232,28 @@ export default function AdminSocialAccountsPage() {
     setIsConnecting(true);
 
     const activeNet = ADMIN_NETWORKS.find((p) => p.slug === selectedPlatformSlug) || ADMIN_NETWORKS[0];
-    const cleanHandle = (accountHandle || getHandlePlaceholder(selectedPlatformSlug)).trim().replace(/^@/, '');
-    const cleanName = (accountName || getNamePlaceholder(selectedPlatformSlug, activeNet.name)).trim();
 
-    if (connectMethod === 'oauth') {
-      try {
-        const res = await fetch('/api/social-accounts/connect', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ platform: selectedPlatformSlug.toUpperCase() }),
-        });
-        const data = await res.json();
-        if (res.ok && data.mode === 'OAUTH_REDIRECT' && data.authUrl) {
-          showToast(`Redirecting to official ${data.displayName || activeNet.name} authorization...`, 'info');
-          window.location.href = data.authUrl;
-          return;
-        }
-        if (data.status === 'CONFIGURATION_REQUIRED' || !res.ok) {
-          showToast(
-            data.error || `${activeNet.name} developer credentials not configured. Switched to Direct Verified Connect.`,
-            'info'
-          );
-          setConnectMethod('instant');
-        }
-      } catch {
-        showToast('Network error while initiating OAuth authorization flow', 'error');
-      } finally {
-        setIsConnecting(false);
-      }
-      return;
-    }
-
-    // Direct Instant Verified Link
     try {
-      const avatarSeed = encodeURIComponent(cleanHandle);
-      const res = await fetch('/api/social-accounts', {
+      const res = await fetch('/api/social-accounts/connect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          platform: selectedPlatformSlug.toUpperCase(),
-          accountName: cleanName,
-          accountHandle: cleanHandle,
-          avatarUrl: `https://api.dicebear.com/7.x/identicon/svg?seed=${avatarSeed}`,
-          status: 'CONNECTED',
-          metadataJson: {
-            accountType,
-            verified: true,
-            networkTier: 'Enterprise Verified',
-            connectedVia: 'Official OAuth 2.0 PKCE Link',
-            connectedAt: new Date().toISOString(),
-          },
-        }),
+        body: JSON.stringify({ platform: selectedPlatformSlug.toUpperCase() }),
       });
-
       const data = await res.json();
-
-      if (res.ok) {
-        showToast(`🎉 ${activeNet.name} channel @${cleanHandle} connected successfully!`, 'success');
-        setIsConnectModalOpen(false);
-        setAccountHandle('');
-        setAccountName('');
-        await fetchAccounts();
-      } else {
-        showToast(data.error || 'Failed to connect channel', 'error');
+      if (res.ok && data.mode === 'OAUTH_REDIRECT' && data.authUrl) {
+        showToast(`Redirecting to official ${data.displayName || activeNet.name} authorization...`, 'info');
+        window.location.href = data.authUrl;
+        return;
+      }
+      if (data.status === 'CONFIGURATION_REQUIRED' || !res.ok) {
+        showToast(
+          data.error || `${activeNet.name} integration is not configured. Add the required OAuth credentials to the server environment.`,
+          'error'
+        );
+        setShowCredsEditor(true);
       }
     } catch {
-      showToast('Network error while saving connected account', 'error');
+      showToast('Network error while initiating OAuth authorization flow', 'error');
     } finally {
       setIsConnecting(false);
     }
@@ -1233,11 +1189,11 @@ export default function AdminSocialAccountsPage() {
                       </div>
                     </div>
 
-                    {/* Connection Method Selector */}
+                    {/* Official OAuth Flow Info */}
                     <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                          Connection Method
+                          Official OAuth 2.0 Flow
                         </span>
                         <button
                           type="button"
@@ -1245,46 +1201,20 @@ export default function AdminSocialAccountsPage() {
                           className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer flex items-center gap-1"
                         >
                           <KeyRound className="w-3 h-3" />
-                          <span>{showCredsEditor ? 'Hide API Keys' : 'Custom API Keys'}</span>
+                          <span>{showCredsEditor ? 'Hide API Keys' : 'API Key Config'}</span>
                         </button>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setConnectMethod('instant')}
-                          className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                            connectMethod === 'instant'
-                              ? 'border-indigo-600 dark:border-indigo-400 bg-indigo-50/80 dark:bg-indigo-950/50 shadow-2xs ring-2 ring-indigo-500/20'
-                              : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40 hover:bg-slate-100/50'
-                          }`}
-                        >
-                          <div className="flex items-center gap-1.5 font-bold text-xs text-slate-900 dark:text-white">
-                            <Zap className="w-3.5 h-3.5 text-amber-500" />
-                            <span>Direct Verified Link</span>
-                          </div>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                            Instant database connection with verified security token &amp; avatar.
+                      <div className="p-3 rounded-xl border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/50 dark:bg-indigo-950/30 flex items-start gap-3">
+                        <Globe className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+                        <div className="text-xs space-y-1">
+                          <p className="font-semibold text-slate-900 dark:text-white">
+                            Direct Official Authorization
                           </p>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setConnectMethod('oauth')}
-                          className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                            connectMethod === 'oauth'
-                              ? 'border-indigo-600 dark:border-indigo-400 bg-indigo-50/80 dark:bg-indigo-950/50 shadow-2xs ring-2 ring-indigo-500/20'
-                              : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40 hover:bg-slate-100/50'
-                          }`}
-                        >
-                          <div className="flex items-center gap-1.5 font-bold text-xs text-slate-900 dark:text-white">
-                            <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
-                            <span>Official OAuth 2.0 Flow</span>
-                          </div>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                            Redirects to official {activeNet.name} login dialog to authorize scopes.
+                          <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                            Clicking <strong>Authorize &amp; Connect</strong> will redirect you to the official {activeNet.name} login page. Once authorized, your real handle, profile avatar, and verified tokens are encrypted in the database.
                           </p>
-                        </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1408,8 +1338,8 @@ export default function AdminSocialAccountsPage() {
                       <SocialPlatformIcon platform={activeNet.slug} size="sm" />
                       <span>
                         {isConnecting
-                          ? `Connecting @${effectiveHandle}...`
-                          : `Authorize & Connect @${effectiveHandle}`}
+                          ? `Redirecting to ${activeNet.name}...`
+                          : `Authorize & Connect ${activeNet.name}`}
                       </span>
                     </Button>
                   </div>

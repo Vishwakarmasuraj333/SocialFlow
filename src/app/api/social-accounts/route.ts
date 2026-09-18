@@ -139,11 +139,40 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
   }
 
-  const platformAccountId = body.platformAccountId || `${cleanPlatform.toLowerCase()}_${Date.now()}`;
+  // Enforce Real OAuth: A handle alone cannot connect an account without an authentic token
+  const providedAccessToken = (body.accessToken || body.token || '').trim();
+  if (!providedAccessToken) {
+    return NextResponse.json(
+      {
+        error: `Official OAuth authorization required. To connect ${cleanPlatform}, please initiate the official OAuth 2.0 flow via /api/social-accounts/connect.`,
+        actionRequired: 'INITIATE_OAUTH',
+      },
+      { status: 400 }
+    );
+  }
 
-  // Encrypt access token payload using AES-256-GCM
-  const dummyToken = `oauth_${cleanPlatform.toLowerCase()}_${Date.now()}_secret`;
-  const encryptedPayload = encryptSecret(dummyToken);
+  // Validate the token against the official platform API
+  const platformType = (cleanPlatform === 'TWITTER' ? 'X' : cleanPlatform) as any;
+  const provider = providerFactory.getProvider(platformType);
+  let verifiedProfile;
+  try {
+    verifiedProfile = await provider.getProfile(providedAccessToken);
+  } catch (err: unknown) {
+    return NextResponse.json(
+      {
+        error: `Platform API token validation failed: ${err instanceof Error ? err.message : 'Invalid access token'}`,
+      },
+      { status: 401 }
+    );
+  }
+
+  const platformAccountId = verifiedProfile.platformAccountId || body.platformAccountId || `${cleanPlatform.toLowerCase()}_${Date.now()}`;
+  const resolvedName = verifiedProfile.accountName || accountName.trim();
+  const resolvedHandle = verifiedProfile.accountHandle || cleanHandle;
+  const resolvedAvatar = verifiedProfile.avatarUrl || avatarUrl;
+
+  // Encrypt verified access token using AES-256-GCM
+  const encryptedPayload = encryptSecret(providedAccessToken);
 
   const formattedMetaJson = typeof metadataJson === 'string'
     ? metadataJson
@@ -158,9 +187,10 @@ export async function POST(req: NextRequest) {
       platform: cleanPlatform,
       OR: [
         { platformAccountId },
-        { accountHandle: cleanHandle },
+        { accountHandle: resolvedHandle },
       ],
     },
+    include: { credentials: true },
   });
 
   let createdAccount;
@@ -169,25 +199,37 @@ export async function POST(req: NextRequest) {
     createdAccount = await prisma.socialAccount.update({
       where: { id: existing.id },
       data: {
-        accountName: accountName.trim(),
-        accountHandle: cleanHandle,
+        accountName: resolvedName,
+        accountHandle: resolvedHandle,
         status: status || 'CONNECTED',
-        avatarUrl: avatarUrl || existing.avatarUrl,
+        avatarUrl: resolvedAvatar || existing.avatarUrl,
         metadataJson: formattedMetaJson || existing.metadataJson,
         lastSyncedAt: new Date(),
+        isSoftDeleted: false,
       },
     });
+
+    if (existing.credentials) {
+      await prisma.oAuthCredential.update({
+        where: { id: existing.credentials.id },
+        data: {
+          encryptedAccessToken: encryptedPayload.encrypted,
+          iv: encryptedPayload.iv,
+          authTag: encryptedPayload.authTag,
+          tokenExpiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+          scopes: scopes || 'read,write,publish,insights',
+        },
+      });
+    }
   } else {
-    // Create new account with credentials
+    // Create new account with verified credentials
     createdAccount = await prisma.socialAccount.create({
       data: {
         workspaceId: targetWorkspaceId,
         platform: cleanPlatform,
-        accountName: accountName.trim(),
-        accountHandle: cleanHandle,
-        avatarUrl:
-          avatarUrl ||
-          `https://api.dicebear.com/7.x/identicon/svg?seed=${cleanHandle}`,
+        accountName: resolvedName,
+        accountHandle: resolvedHandle,
+        avatarUrl: resolvedAvatar,
         platformAccountId,
         status: status || 'CONNECTED',
         metadataJson: formattedMetaJson,
@@ -197,7 +239,7 @@ export async function POST(req: NextRequest) {
             encryptedAccessToken: encryptedPayload.encrypted,
             iv: encryptedPayload.iv,
             authTag: encryptedPayload.authTag,
-            tokenExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
+            tokenExpiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days
             scopes: scopes || 'read,write,publish,insights',
           },
         },

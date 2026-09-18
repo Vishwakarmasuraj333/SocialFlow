@@ -797,6 +797,43 @@ export class PinterestProvider extends SocialProvider {
     if (!mediaUrl) return { success: false, errorMessage: 'Pinterest pins require an image URL.' };
 
     try {
+      // Pinterest API v5 strictly requires a board_id
+      let boardId = (payload.platformSpecificOptions?.boardId as string) || '';
+      if (!boardId) {
+        // Fetch user's existing boards
+        const boardsRes = await fetch('https://api.pinterest.com/v5/boards', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (boardsRes.ok) {
+          const boardsData = await boardsRes.json();
+          const boards = boardsData.items || [];
+          if (boards.length > 0) {
+            boardId = boards[0].id;
+          } else {
+            // Create default board if none exists
+            const createBoardRes = await fetch('https://api.pinterest.com/v5/boards', {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ name: 'SocialFlow Pins', description: 'Pins published via SocialFlow' }),
+            });
+            if (createBoardRes.ok) {
+              const newBoard = await createBoardRes.json();
+              boardId = newBoard.id;
+            }
+          }
+        }
+      }
+
+      if (!boardId) {
+        return {
+          success: false,
+          errorMessage: 'Pinterest requires an active Board to publish Pins. Please create a board on your Pinterest account.',
+        };
+      }
+
       const res = await fetch('https://api.pinterest.com/v5/pins', {
         method: 'POST',
         headers: {
@@ -804,8 +841,10 @@ export class PinterestProvider extends SocialProvider {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          board_id: boardId,
           title: payload.title || payload.content.slice(0, 100),
           description: payload.content,
+          link: payload.linkUrl || undefined,
           media_source: {
             source_type: 'image_url',
             url: mediaUrl,

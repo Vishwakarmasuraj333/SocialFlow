@@ -9,6 +9,7 @@ import {
   CommentReplyResult,
   SocialAnalyticsData,
   AccountProfileResult,
+  SocialCapabilities,
 } from './types';
 
 export abstract class SocialProvider {
@@ -166,6 +167,20 @@ export abstract class SocialProvider {
    */
   getCapabilities(): ProviderCapabilities {
     return this.capabilities;
+  }
+
+  /**
+   * Returns standard social capabilities boolean matrix
+   */
+  getSocialCapabilities(): SocialCapabilities {
+    return {
+      publishing: this.capabilities.supportsPublishing,
+      scheduling: this.capabilities.supportsScheduling,
+      mediaUpload: this.capabilities.supportsMedia,
+      analytics: this.capabilities.supportsAnalytics,
+      comments: this.capabilities.supportsComments,
+      messaging: this.capabilities.supportsMessaging,
+    };
   }
 
   /**

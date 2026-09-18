@@ -150,15 +150,53 @@ export class InstagramProvider extends SocialProvider {
     }
 
     try {
+      // Resolve Instagram Business Account ID from token or platform options
+      let igUserId = (payload.platformSpecificOptions?.igAccountId as string) || '';
+      let effectiveToken = accessToken;
+
+      if (!igUserId) {
+        const accountsRes = await fetch(
+          `https://graph.facebook.com/v19.0/me/accounts?fields=id,access_token,instagram_business_account{id}&access_token=${accessToken}`
+        );
+        if (accountsRes.ok) {
+          const accountsData = await accountsRes.json();
+          for (const page of accountsData.data || []) {
+            if (page.instagram_business_account?.id) {
+              igUserId = page.instagram_business_account.id;
+              if (page.access_token) {
+                effectiveToken = page.access_token;
+              }
+              break;
+            }
+          }
+        }
+      }
+
+      if (!igUserId) {
+        return {
+          success: false,
+          errorMessage: 'No Instagram Business Account linked to this Facebook Page. Please ensure an Instagram Professional account is connected to your Facebook Page.',
+        };
+      }
+
       // Step 1: Create Media Container
-      const containerRes = await fetch(`https://graph.facebook.com/v19.0/me/media`, {
+      const isVideo = mediaUrl.match(/\.(mp4|mov|avi|webm)$/i);
+      const containerPayload: Record<string, unknown> = {
+        caption: payload.content,
+        access_token: effectiveToken,
+      };
+
+      if (isVideo) {
+        containerPayload.media_type = 'VIDEO';
+        containerPayload.video_url = mediaUrl;
+      } else {
+        containerPayload.image_url = mediaUrl;
+      }
+
+      const containerRes = await fetch(`https://graph.facebook.com/v19.0/${igUserId}/media`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image_url: mediaUrl,
-          caption: payload.content,
-          access_token: accessToken,
-        }),
+        body: JSON.stringify(containerPayload),
       });
 
       const containerData = await containerRes.json();
@@ -170,13 +208,13 @@ export class InstagramProvider extends SocialProvider {
         };
       }
 
-      // Step 2: Publish Media
-      const publishRes = await fetch(`https://graph.facebook.com/v19.0/me/media_publish`, {
+      // Step 2: Publish Media Container
+      const publishRes = await fetch(`https://graph.facebook.com/v19.0/${igUserId}/media_publish`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           creation_id: containerData.id,
-          access_token: accessToken,
+          access_token: effectiveToken,
         }),
       });
 

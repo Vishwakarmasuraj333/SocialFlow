@@ -28,6 +28,15 @@ export type ConfigurationStatus =
   | 'BUSINESS_VERIFICATION_REQUIRED'
   | 'NOT_SUPPORTED';
 
+export interface SocialCapabilities {
+  publishing: boolean;
+  scheduling: boolean;
+  mediaUpload: boolean;
+  analytics: boolean;
+  comments: boolean;
+  messaging: boolean;
+}
+
 export interface ProviderCapabilities {
   platform: PlatformType;
   displayName: string;

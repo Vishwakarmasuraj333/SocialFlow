@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     if (!isConfigured) {
       return NextResponse.json(
         {
-          error: `Configuration Required: ${provider.capabilities.displayName} API credentials are not configured on the server.`,
+          error: `${provider.capabilities.displayName} integration is not configured. Add the required OAuth credentials to the server environment.`,
           status: 'CONFIGURATION_REQUIRED',
           platform: platformType,
           displayName: provider.capabilities.displayName,
@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const redirectUri = `${appUrl}/api/social-accounts/callback/${platformType.toLowerCase()}`;
+    const { getPlatformRedirectUri } = await import('@/services/social/redirect-uri');
+    const redirectUri = getPlatformRedirectUri(platformType);
 
     // Cryptographically signed state token (prevents CSRF and tampering)
     const state = await generateOAuthState({

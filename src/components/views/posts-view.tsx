@@ -474,7 +474,7 @@ export default function PostsView() {
                       )}
 
                       <div className="flex items-center gap-4 text-[11px] text-slate-500 dark:text-slate-400">
-                        <span>Author: <b className="text-slate-800 dark:text-slate-200">{post.author?.name || 'Suraj Vishwakarma'}</b></span>
+                        <span>Author: <b className="text-slate-800 dark:text-slate-200">{post.author?.name || 'Administrator'}</b></span>
                         {post.scheduledAt && (
                           <span>Scheduled: <b>{new Date(post.scheduledAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</b></span>
                         )}

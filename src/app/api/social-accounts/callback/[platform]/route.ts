@@ -44,7 +44,8 @@ export async function GET(
 
     const platformType = (platform === 'TWITTER' ? 'X' : platform.toUpperCase()) as PlatformType;
     const provider = providerFactory.getProvider(platformType);
-    const redirectUri = `${appUrl}/api/social-accounts/callback/${platform.toLowerCase()}`;
+    const { getPlatformRedirectUri } = await import('@/services/social/redirect-uri');
+    const redirectUri = getPlatformRedirectUri(platformType);
 
     // Exchange authorization code for real access tokens
     const tokenResult = await provider.handleCallback(code, redirectUri, stateData.codeVerifier);
