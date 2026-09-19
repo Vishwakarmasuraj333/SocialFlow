@@ -53,7 +53,8 @@ export async function GET(req: NextRequest) {
     });
 
     // Approved OpenID Connect and Share on LinkedIn scopes
-    const scopes = encodeURIComponent('openid profile email w_member_social');
+    const rawScopes = (process.env.LINKEDIN_SCOPES || 'openid profile email w_member_social').trim();
+    const scopes = encodeURIComponent(rawScopes);
 
     // Build LinkedIn OAuth 2.0 Authorization URL
     const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(

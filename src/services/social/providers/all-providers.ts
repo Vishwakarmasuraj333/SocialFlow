@@ -486,7 +486,8 @@ export class LinkedInProvider extends SocialProvider {
 
   getAuthorizationUrl(state: string, redirectUri: string): string {
     const { clientId } = getLinkedInOAuthCredentials();
-    const scopes = encodeURIComponent('openid profile email w_member_social');
+    const rawScopes = (process.env.LINKEDIN_SCOPES || 'openid profile email w_member_social').trim();
+    const scopes = encodeURIComponent(rawScopes);
     return `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=${scopes}`;
   }
 
