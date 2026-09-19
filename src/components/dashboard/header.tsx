@@ -194,12 +194,23 @@ export function Header({
 
   return (
     <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/85 dark:bg-slate-950/85 px-4 sm:px-6 backdrop-blur-md transition-colors duration-200">
-      {/* Left side: Animated Hamburger-to-X Cross & Workspace Switcher */}
-      <div className="flex items-center gap-3">
+      {/* Left side: Admin Logo, Animated Hamburger & Workspace Switcher */}
+      <div className="flex items-center gap-2.5 sm:gap-3">
+        {/* Mobile Admin Responsive Brand Logo FIRST */}
+        <Link href="/admin/dashboard" className="md:hidden flex items-center gap-1.5 shrink-0 group">
+          <SocialFlowLogo iconOnly size="xs" animated />
+          <span className="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full border bg-gradient-to-r from-rose-500/15 via-pink-500/10 to-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-300 dark:border-rose-700/60 shadow-xs flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+            ADMIN
+          </span>
+        </Link>
+
+        {/* Mobile Animated Hamburger Menu Toggle Button */}
         <button
+          type="button"
           onClick={onToggleMobileMenu || onOpenMobileMenu}
           aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-          className="md:hidden relative w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors flex items-center justify-center cursor-pointer overflow-hidden focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs"
+          className="md:hidden relative w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors flex items-center justify-center cursor-pointer overflow-hidden focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs shrink-0"
         >
           <div className="w-4 h-3.5 relative flex flex-col justify-between items-center pointer-events-none">
             <span
@@ -219,15 +230,6 @@ export function Header({
             />
           </div>
         </button>
-
-        {/* Mobile Brand Logo */}
-        <Link href="/admin/dashboard" className="md:hidden flex items-center gap-1.5 shrink-0 group">
-          <SocialFlowLogo iconOnly size="xs" animated />
-          <span className="text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded-full border bg-gradient-to-r from-rose-500/15 via-pink-500/10 to-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-300 dark:border-rose-700/60 shadow-xs flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-            ADMIN
-          </span>
-        </Link>
 
         {/* Workspace Dropdown */}
         <div className="relative" ref={wsRef}>

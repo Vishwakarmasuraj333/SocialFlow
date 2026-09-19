@@ -220,7 +220,7 @@ function AdminLoginForm() {
                   setEmail(e.target.value);
                   if (error && urlError !== 'forbidden') setError(null);
                 }}
-                placeholder="admin@yourdomain.com"
+                placeholder="Enter your email address"
                 aria-invalid={!!error}
                 aria-describedby={error ? 'login-error-msg' : undefined}
                 className="block w-full pl-10 pr-3.5 py-2.5 text-sm bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 transition-colors font-medium"
@@ -251,7 +251,7 @@ function AdminLoginForm() {
                   setPassword(e.target.value);
                   if (error && urlError !== 'forbidden') setError(null);
                 }}
-                placeholder="Enter your administrator password"
+                placeholder="Enter your password"
                 aria-invalid={!!error}
                 aria-describedby={error ? 'login-error-msg' : undefined}
                 className="block w-full pl-10 pr-11 py-2.5 text-sm bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 transition-colors tracking-widest"
@@ -355,7 +355,7 @@ function AdminLoginForm() {
                     required
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
-                    placeholder="admin@socialflow.io"
+                    placeholder="Enter your email address"
                     className="block w-full px-3.5 py-2.5 text-sm bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                   />
                 </div>

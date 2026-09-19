@@ -185,7 +185,7 @@ export function AdminLoginView({ defaultRedirect = '/admin/dashboard' }: { defau
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@socialflow.io"
+                  placeholder="Enter your email address"
                   className="block w-full pl-10 pr-3.5 py-2.5 text-sm bg-slate-950/70 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                 />
               </div>
@@ -205,7 +205,7 @@ export function AdminLoginView({ defaultRedirect = '/admin/dashboard' }: { defau
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="•••••••••••• (min 8 characters)"
+                  placeholder="Enter your password"
                   className="block w-full pl-10 pr-11 py-2.5 text-sm bg-slate-950/70 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                 />
                 <button
@@ -303,7 +303,7 @@ export function AdminLoginView({ defaultRedirect = '/admin/dashboard' }: { defau
                     required
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
-                    placeholder="admin@yourdomain.com"
+                    placeholder="Enter your email address"
                     className="block w-full px-3.5 py-2.5 text-sm bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                   />
                 </div>

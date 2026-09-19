@@ -266,7 +266,7 @@ export default function AdminDashboardPage() {
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-12 h-8 rounded-lg overflow-hidden shrink-0 border border-slate-200 dark:border-slate-800 bg-slate-900 shadow-2xs">
                       <img
-                        src={`https://s0.wp.com/mshots/v1/${encodeURIComponent(web.url || 'https://' + web.domain)}?w=240`}
+                        src={`https://image.thum.io/get/width/400/crop/300/noanimate/${web.url || 'https://' + web.domain}`}
                         alt={web.name}
                         className="w-full h-full object-cover object-top"
                         onError={(e) => {

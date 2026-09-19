@@ -44,9 +44,9 @@ export function WebsiteScreenshot({
   // Check if a direct local preview image or configured preview image is available
   const resolvedImg = resolveWebsitePreview(cleanDomain, targetUrl, previewImage);
 
-  // High-reliability live real-time screenshot capture services (Automattic mShots + Thum.io + Microlink)
+  // High-reliability live real-time screenshot capture services (Thum.io + Microlink)
+  // ZERO WordPress mshots branding / ZERO "Generating Preview..." placeholders
   const liveScreenshotSources = [
-    `https://s0.wp.com/mshots/v1/${encodeURIComponent(targetUrl)}?w=1280`,
     `https://image.thum.io/get/width/1200/crop/800/noanimate/${targetUrl}`,
     `https://api.microlink.io/?url=${encodeURIComponent(targetUrl)}&screenshot=true&meta=false&embed=screenshot.url`,
   ];

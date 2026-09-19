@@ -621,7 +621,7 @@ export default function AllWebsitesPage() {
                 required
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="e.g. SocialFlow Global App, Acme SaaS Portal"
+                placeholder="e.g. My Website, Portfolio, Client App"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
@@ -661,7 +661,7 @@ export default function AllWebsitesPage() {
                     url: cleanDomain ? `https://${cleanDomain}` : '',
                   }));
                 }}
-                placeholder="e.g. in.pinterest.com, seranking.com, acme-app.com"
+                placeholder="e.g. example.com, mycompany.com"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
@@ -682,7 +682,7 @@ export default function AllWebsitesPage() {
                     url: cleanUrl,
                   }));
                 }}
-                placeholder="https://socialflow-zeta-one.vercel.app"
+                placeholder="https://example.com"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
@@ -711,7 +711,7 @@ export default function AllWebsitesPage() {
                 type="text"
                 value={form.hostingProvider}
                 onChange={(e) => setForm({ ...form, hostingProvider: e.target.value })}
-                placeholder="Vercel Production, AWS, Cloudflare"
+                placeholder="e.g. Vercel, AWS, Cloudflare, Netlify"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
               <datalist id="hosting-providers-list">
@@ -734,7 +734,7 @@ export default function AllWebsitesPage() {
                 type="text"
                 value={form.framework}
                 onChange={(e) => setForm({ ...form, framework: e.target.value })}
-                placeholder="Next.js 16, React 19, Three.js WebGL"
+                placeholder="e.g. Next.js, React, WordPress, Vue"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
               <datalist id="frameworks-list">
@@ -756,7 +756,7 @@ export default function AllWebsitesPage() {
                 type="text"
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                placeholder="e.g. 18 Monitored Routes, Main App & API"
+                placeholder="e.g. Production Web App & APIs"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
@@ -769,7 +769,7 @@ export default function AllWebsitesPage() {
                 type="text"
                 value={form.serverIp}
                 onChange={(e) => setForm({ ...form, serverIp: e.target.value })}
-                placeholder="76.76.21.21"
+                placeholder="e.g. 192.0.2.1"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
@@ -859,7 +859,7 @@ export default function AllWebsitesPage() {
                   const cleanUrl = val.trim().replace(/^(https?:\/\/)+/gi, 'https://');
                   setEditForm({ ...editForm, url: cleanUrl });
                 }}
-                placeholder="https://socialflow-zeta-one.vercel.app"
+                placeholder="https://example.com"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
@@ -888,7 +888,7 @@ export default function AllWebsitesPage() {
                 type="text"
                 value={editForm.hostingProvider}
                 onChange={(e) => setEditForm({ ...editForm, hostingProvider: e.target.value })}
-                placeholder="Vercel Production, AWS, Cloudflare"
+                placeholder="e.g. Vercel, AWS, Cloudflare, Netlify"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
@@ -901,7 +901,7 @@ export default function AllWebsitesPage() {
                 type="text"
                 value={editForm.cms}
                 onChange={(e) => setEditForm({ ...editForm, cms: e.target.value })}
-                placeholder="Next.js 16, App Router Engine"
+                placeholder="e.g. Next.js, WordPress, Custom Engine"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
@@ -915,7 +915,7 @@ export default function AllWebsitesPage() {
                 type="text"
                 value={editForm.framework}
                 onChange={(e) => setEditForm({ ...editForm, framework: e.target.value })}
-                placeholder="Next.js 16, React 19, Three.js WebGL"
+                placeholder="e.g. Next.js, React, WordPress, Vue"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
               />
             </div>
