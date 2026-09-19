@@ -4,7 +4,6 @@ import { providerFactory } from '@/services/social/provider-factory';
 import { encryptSecret } from '@/lib/encryption';
 import { logAuditEvent } from '@/lib/audit';
 import { verifyOAuthState } from '@/lib/oauth-state';
-import { syncDbCredentialsToEnv } from '@/services/platform-service';
 import { getPlatformRedirectUri } from '@/services/social/redirect-uri';
 
 export async function GET(req: NextRequest) {
@@ -41,8 +40,6 @@ export async function GET(req: NextRequest) {
         `${appUrl}/admin/social/accounts?error=${encodeURIComponent('PKCE code verifier is missing from session. Please restart connection.')}`
       );
     }
-
-    await syncDbCredentialsToEnv();
 
     const provider = providerFactory.getProvider('X');
     const redirectUri = getPlatformRedirectUri('X');

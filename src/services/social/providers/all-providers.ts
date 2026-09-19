@@ -148,15 +148,27 @@ export class FacebookProvider extends SocialProvider {
   }
 }
 
-// Helper to validate and retrieve X OAuth credentials
+// Helper to validate and retrieve X OAuth credentials from server environment
 function getXOAuthCredentials(): { clientId: string; clientSecret: string } {
   const clientId = (process.env.X_CLIENT_ID || process.env.TWITTER_CLIENT_ID || '').trim();
   const clientSecret = (process.env.X_CLIENT_SECRET || process.env.TWITTER_CLIENT_SECRET || '').trim();
 
-  if (clientId.includes('@')) {
+  if (!clientId) {
+    throw new Error('X OAuth Client ID is missing. Set X_CLIENT_ID in your server environment variables (e.g. Vercel Project Settings).');
+  }
+
+  if (
+    clientId.includes('@') ||
+    clientId.length < 3 ||
+    ['placeholder', 'your_client_id', 'client_id', 'none', 'null', 'undefined'].includes(clientId.toLowerCase())
+  ) {
     throw new Error(
-      'Invalid X_CLIENT_ID: Your email address was passed as client_id. Set X_CLIENT_ID to the official OAuth 2.0 Client ID from the X Developer Portal.'
+      'Invalid X_CLIENT_ID: Your email address or a placeholder is configured instead of the official OAuth 2.0 Client ID from the X Developer Portal.'
     );
+  }
+
+  if (!clientSecret) {
+    throw new Error('X OAuth Client Secret is missing. Set X_CLIENT_SECRET in your server environment variables.');
   }
 
   return { clientId, clientSecret };
@@ -414,6 +426,28 @@ export class XProvider extends SocialProvider {
   }
 }
 
+// Helper to validate and retrieve LinkedIn OAuth credentials from server environment
+function getLinkedInOAuthCredentials(): { clientId: string; clientSecret: string } {
+  const clientId = (process.env.LINKEDIN_CLIENT_ID || '').trim();
+  const clientSecret = (process.env.LINKEDIN_CLIENT_SECRET || '').trim();
+
+  if (!clientId) {
+    throw new Error('LinkedIn OAuth Client ID is missing. Set LINKEDIN_CLIENT_ID in your server environment variables (e.g. Vercel Project Settings).');
+  }
+
+  if (
+    clientId.includes('@') ||
+    clientId.length < 3 ||
+    ['placeholder', 'your_client_id', 'client_id', 'none', 'null', 'undefined', 'your_linkedin_client_id'].includes(clientId.toLowerCase())
+  ) {
+    throw new Error(
+      'Invalid LINKEDIN_CLIENT_ID: Your email address or a placeholder is configured instead of the official OAuth 2.0 Client ID from the LinkedIn Developer Portal.'
+    );
+  }
+
+  return { clientId, clientSecret };
+}
+
 // ==========================================
 // 3. LINKEDIN PROVIDER
 // ==========================================
@@ -451,19 +485,15 @@ export class LinkedInProvider extends SocialProvider {
   };
 
   getAuthorizationUrl(state: string, redirectUri: string): string {
-    const clientId = (process.env.LINKEDIN_CLIENT_ID || '').trim();
-    if (!clientId || clientId.includes('@')) {
-      throw new Error('Invalid or missing LINKEDIN_CLIENT_ID: Set LINKEDIN_CLIENT_ID to your official LinkedIn Client ID from the LinkedIn Developer Portal (never your email).');
-    }
+    const { clientId } = getLinkedInOAuthCredentials();
     const scopes = encodeURIComponent('openid profile email w_member_social');
     return `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=${scopes}`;
   }
 
   async handleCallback(code: string, redirectUri: string): Promise<TokenExchangeResult> {
-    const clientId = (process.env.LINKEDIN_CLIENT_ID || '').trim();
-    const clientSecret = (process.env.LINKEDIN_CLIENT_SECRET || '').trim();
-    if (!clientId || clientId.includes('@') || !clientSecret || clientSecret.includes('@')) {
-      throw new Error('LinkedIn credentials invalid or contaminated with email in environment.');
+    const { clientId, clientSecret } = getLinkedInOAuthCredentials();
+    if (!clientSecret) {
+      throw new Error('LinkedIn OAuth Client Secret is missing. Set LINKEDIN_CLIENT_SECRET in your server environment variables.');
     }
 
     const res = await fetch('https://www.linkedin.com/oauth/v2/accessToken', {

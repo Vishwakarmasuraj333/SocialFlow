@@ -18,22 +18,25 @@ export async function POST(req: NextRequest) {
     }
 
     const trimmedClientId = String(clientId).trim();
-    if (trimmedClientId.includes('@')) {
+    if (
+      trimmedClientId.includes('@') ||
+      trimmedClientId.length < 3 ||
+      ['placeholder', 'your_client_id', 'client_id', 'none', 'null', 'undefined'].includes(trimmedClientId.toLowerCase())
+    ) {
       return NextResponse.json(
-        { error: 'Invalid Client ID: You provided an email address instead of the official OAuth Client ID / App ID from the platform developer portal.' },
+        { error: 'Invalid Client ID: Please enter a valid OAuth Client ID / App Key from the official developer portal (never an email or placeholder).' },
         { status: 400 }
       );
     }
 
     const cleanSlug = String(platform).toLowerCase().trim();
 
-    // Upsert platform credentials into Database
+    // Upsert platform metadata into Database (Client Secret is never stored in DB; it belongs in server environment)
     const updated = await prisma.platform.upsert({
       where: { slug: cleanSlug },
       update: {
         clientId: trimmedClientId,
-        ...(clientSecret ? { clientSecret: clientSecret.trim() } : {}),
-        ...(clientSecret ? { clientSecret: clientSecret.trim() } : {}),
+        clientSecret: null, // Clear any legacy secrets from DB
         ...(scopes ? { scopes: scopes.trim() } : {}),
         ...(authUrl ? { authUrl: authUrl.trim() } : {}),
         ...(tokenUrl ? { tokenUrl: tokenUrl.trim() } : {}),
@@ -43,14 +46,11 @@ export async function POST(req: NextRequest) {
         name: cleanSlug.toUpperCase(),
         slug: cleanSlug,
         logo: cleanSlug,
-        clientId: clientId.trim(),
-        clientSecret: clientSecret ? clientSecret.trim() : null,
+        clientId: trimmedClientId,
+        clientSecret: null,
         status: 'AVAILABLE',
       },
     });
-
-    // Sync into process.env so provider instance has them immediately
-    await syncDbCredentialsToEnv();
 
     const config = checkPlatformConfigStatus(cleanSlug, 0);
 

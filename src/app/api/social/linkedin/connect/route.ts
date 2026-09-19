@@ -12,27 +12,26 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(loginUrl.toString());
     }
 
-    const { syncDbCredentialsToEnv } = await import('@/services/platform-service');
-    await syncDbCredentialsToEnv();
-
-    let clientId = (process.env.LINKEDIN_CLIENT_ID || '').trim();
-    if (clientId.includes('@')) {
-      clientId = '';
-    }
-
-    if (!clientId) {
-      const prisma = (await import('@/lib/db')).default;
-      const plat = await prisma.platform.findUnique({ where: { slug: 'linkedin' } });
-      if (plat?.clientId && !plat.clientId.includes('@')) {
-        clientId = plat.clientId.trim();
-      }
-    }
-
+    const clientId = (process.env.LINKEDIN_CLIENT_ID || '').trim();
     if (!clientId) {
       return NextResponse.json(
         {
           error: 'CONFIG_ERROR',
-          message: 'LINKEDIN_CLIENT_ID is not configured in server environment variables or database.',
+          message: 'LINKEDIN_CLIENT_ID is not configured in server environment variables. Please configure it in your deployment environment variables.',
+        },
+        { status: 400 }
+      );
+    }
+
+    if (
+      clientId.includes('@') ||
+      clientId.length < 3 ||
+      ['placeholder', 'client_id', 'none', 'null', 'undefined'].includes(clientId.toLowerCase())
+    ) {
+      return NextResponse.json(
+        {
+          error: 'CONFIG_ERROR',
+          message: 'Invalid LINKEDIN_CLIENT_ID: Your email address or a placeholder is configured instead of the official OAuth Client ID from the LinkedIn Developer Portal.',
         },
         { status: 400 }
       );

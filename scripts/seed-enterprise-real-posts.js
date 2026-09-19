@@ -56,7 +56,7 @@ async function main() {
     {
       platform: 'PINTEREST',
       accountName: 'Suraj Vishwakarma',
-      accountHandle: '@itxsurajofficial@gmail.com',
+      accountHandle: '@suraj_official',
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
       platformAccountId: 'pin_suraj_enterprise_01',
       token: process.env.PINTEREST_ACCESS_TOKEN || '',

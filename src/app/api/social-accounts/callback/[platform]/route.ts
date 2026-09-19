@@ -5,7 +5,6 @@ import { PlatformType } from '@/services/social/types';
 import { encryptSecret } from '@/lib/encryption';
 import { logAuditEvent } from '@/lib/audit';
 import { verifyOAuthState } from '@/lib/oauth-state';
-import { syncDbCredentialsToEnv } from '@/services/platform-service';
 
 export async function GET(
   req: NextRequest,
@@ -39,8 +38,6 @@ export async function GET(
         `${appUrl}/admin/social/accounts?error=${encodeURIComponent('Invalid or expired OAuth state token. Please restart connection.')}`
       );
     }
-
-    await syncDbCredentialsToEnv();
 
     const platformType = (platform === 'TWITTER' ? 'X' : platform.toUpperCase()) as PlatformType;
     const provider = providerFactory.getProvider(platformType);

@@ -62,134 +62,71 @@ export async function ensureDefaultPlatforms() {
 }
 
 /**
- * Dynamically loads database-configured OAuth credentials into process.env
- * so all certified providers can operate seamlessly even without manual .env edits.
+ * Sanitizes legacy database records that might contain emails or invalid credentials.
+ * Architectural rule: Database records NEVER inject credentials into process.env.
+ * All OAuth credentials must come strictly from server-side environment variables.
  */
-export async function syncDbCredentialsToEnv() {
+export async function sanitizeLegacyPlatformCredentials() {
   try {
-    // 1. One-time DB cleanup: remove invalid email values saved in clientId
     await prisma.platform.updateMany({
       where: {
-        clientId: { contains: '@' },
+        OR: [
+          { clientId: { contains: '@' } },
+          { clientSecret: { contains: '@' } },
+        ],
       },
       data: {
         clientId: null,
         clientSecret: null,
       },
     }).catch(() => {});
-
-    const configuredInDb = await prisma.platform.findMany({
-      where: {
-        isSoftDeleted: false,
-        clientId: { not: null },
-      },
-      select: {
-        slug: true,
-        clientId: true,
-        clientSecret: true,
-      },
-    });
-
-    for (const p of configuredInDb) {
-      if (!p.clientId || p.clientId.includes('@')) continue;
-      const slug = p.slug.toLowerCase();
-      const secret = p.clientSecret && !p.clientSecret.includes('@') ? p.clientSecret : '';
-
-      switch (slug) {
-        case 'facebook':
-        case 'instagram':
-        case 'threads':
-          if (!process.env.META_APP_ID) process.env.META_APP_ID = p.clientId;
-          if (secret && !process.env.META_APP_SECRET) process.env.META_APP_SECRET = secret;
-          break;
-        case 'linkedin':
-          if (!process.env.LINKEDIN_CLIENT_ID) process.env.LINKEDIN_CLIENT_ID = p.clientId;
-          if (secret && !process.env.LINKEDIN_CLIENT_SECRET) process.env.LINKEDIN_CLIENT_SECRET = secret;
-          break;
-        case 'x':
-        case 'twitter':
-          if (!process.env.X_CLIENT_ID) process.env.X_CLIENT_ID = p.clientId;
-          if (secret && !process.env.X_CLIENT_SECRET) process.env.X_CLIENT_SECRET = secret;
-          if (!process.env.TWITTER_CLIENT_ID) process.env.TWITTER_CLIENT_ID = p.clientId;
-          if (secret && !process.env.TWITTER_CLIENT_SECRET) process.env.TWITTER_CLIENT_SECRET = secret;
-          break;
-        case 'youtube':
-          if (!process.env.YOUTUBE_CLIENT_ID) process.env.YOUTUBE_CLIENT_ID = p.clientId;
-          if (secret && !process.env.YOUTUBE_CLIENT_SECRET) process.env.YOUTUBE_CLIENT_SECRET = secret;
-          if (!process.env.GOOGLE_CLIENT_ID) process.env.GOOGLE_CLIENT_ID = p.clientId;
-          if (secret && !process.env.GOOGLE_CLIENT_SECRET) process.env.GOOGLE_CLIENT_SECRET = secret;
-          break;
-        case 'tiktok':
-          if (!process.env.TIKTOK_CLIENT_KEY) process.env.TIKTOK_CLIENT_KEY = p.clientId;
-          if (secret && !process.env.TIKTOK_CLIENT_SECRET) process.env.TIKTOK_CLIENT_SECRET = secret;
-          break;
-        case 'pinterest':
-          if (!process.env.PINTEREST_APP_ID) process.env.PINTEREST_APP_ID = p.clientId;
-          if (secret && !process.env.PINTEREST_APP_SECRET) process.env.PINTEREST_APP_SECRET = secret;
-          break;
-        case 'snapchat':
-          if (!process.env.SNAPCHAT_CLIENT_ID) process.env.SNAPCHAT_CLIENT_ID = p.clientId;
-          if (secret && !process.env.SNAPCHAT_CLIENT_SECRET) process.env.SNAPCHAT_CLIENT_SECRET = secret;
-          break;
-        case 'reddit':
-          if (!process.env.REDDIT_CLIENT_ID) process.env.REDDIT_CLIENT_ID = p.clientId;
-          if (secret && !process.env.REDDIT_CLIENT_SECRET) process.env.REDDIT_CLIENT_SECRET = secret;
-          break;
-        case 'whatsapp':
-          if (!process.env.META_APP_ID) process.env.META_APP_ID = p.clientId;
-          if (secret && !process.env.WHATSAPP_PHONE_NUMBER_ID) process.env.WHATSAPP_PHONE_NUMBER_ID = secret;
-          break;
-        case 'telegram':
-          if (!process.env.TELEGRAM_BOT_TOKEN) process.env.TELEGRAM_BOT_TOKEN = p.clientId;
-          break;
-        case 'discord':
-          if (!process.env.DISCORD_CLIENT_ID) process.env.DISCORD_CLIENT_ID = p.clientId;
-          if (secret && !process.env.DISCORD_BOT_TOKEN) process.env.DISCORD_BOT_TOKEN = secret;
-          break;
-        case 'bluesky':
-          if (!process.env.BLUESKY_IDENTIFIER) process.env.BLUESKY_IDENTIFIER = p.clientId;
-          if (secret && !process.env.BLUESKY_APP_PASSWORD) process.env.BLUESKY_APP_PASSWORD = secret;
-          break;
-        case 'mastodon':
-          if (!process.env.MASTODON_ACCESS_TOKEN) process.env.MASTODON_ACCESS_TOKEN = p.clientId;
-          break;
-        case 'tumblr':
-          if (!process.env.TUMBLR_CONSUMER_KEY) process.env.TUMBLR_CONSUMER_KEY = p.clientId;
-          if (secret && !process.env.TUMBLR_CONSUMER_SECRET) process.env.TUMBLR_CONSUMER_SECRET = secret;
-          break;
-        case 'medium':
-          if (!process.env.MEDIUM_CLIENT_ID) process.env.MEDIUM_CLIENT_ID = p.clientId;
-          if (secret && !process.env.MEDIUM_CLIENT_SECRET) process.env.MEDIUM_CLIENT_SECRET = secret;
-          break;
-        case 'quora':
-          if (!process.env.QUORA_ACCESS_TOKEN) process.env.QUORA_ACCESS_TOKEN = p.clientId;
-          break;
-        case 'wordpress':
-          if (!process.env.WORDPRESS_SITE_URL) process.env.WORDPRESS_SITE_URL = p.clientId;
-          if (secret && !process.env.WORDPRESS_APP_PASSWORD) process.env.WORDPRESS_APP_PASSWORD = secret;
-          break;
-        case 'vimeo':
-          if (!process.env.VIMEO_CLIENT_ID) process.env.VIMEO_CLIENT_ID = p.clientId;
-          if (secret && !process.env.VIMEO_CLIENT_SECRET) process.env.VIMEO_CLIENT_SECRET = secret;
-          break;
-      }
-    }
   } catch (err) {
-    console.error('Error syncing DB credentials to env:', err);
+    console.error('Error sanitizing legacy platform credentials:', err);
   }
 }
 
 /**
+ * Legacy compatibility stub: Database-to-environment synchronization is disabled.
+ * OAuth Client IDs and Secrets are loaded strictly from server-side environment variables.
+ */
+export async function syncDbCredentialsToEnv() {
+  await sanitizeLegacyPlatformCredentials();
+}
+
+/**
  * Returns all database platforms merged with real connection status.
+ * Client secrets are NEVER returned to the client/API response.
  */
 export async function getPlatformsWithRealStatus(workspaceId?: string) {
   await ensureDefaultPlatforms();
-  await syncDbCredentialsToEnv();
+  await sanitizeLegacyPlatformCredentials();
 
   const [platforms, accounts] = await Promise.all([
     prisma.platform.findMany({
       where: { isSoftDeleted: false },
       orderBy: { name: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        logo: true,
+        category: true,
+        oauthEnabled: true,
+        publishingEnabled: true,
+        analyticsEnabled: true,
+        messagingEnabled: true,
+        schedulingEnabled: true,
+        characterLimit: true,
+        mediaLimit: true,
+        videoSupport: true,
+        imageSupport: true,
+        apiVersion: true,
+        status: true,
+        clientId: true,
+        // clientSecret is strictly omitted for security
+        createdAt: true,
+        updatedAt: true,
+      },
     }),
     prisma.socialAccount.findMany({
       where: {

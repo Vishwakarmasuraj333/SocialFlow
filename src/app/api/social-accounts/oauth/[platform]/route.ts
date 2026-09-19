@@ -4,7 +4,6 @@ import { hasPermission } from '@/lib/rbac';
 import { providerFactory } from '@/services/social/provider-factory';
 import { PlatformType } from '@/services/social/types';
 import { generateOAuthState } from '@/lib/oauth-state';
-import { syncDbCredentialsToEnv } from '@/services/platform-service';
 import { getPlatformRedirectUri } from '@/services/social/redirect-uri';
 
 export async function GET(
@@ -31,8 +30,6 @@ export async function GET(
         `${appUrl}/admin/social/accounts?error=${encodeURIComponent('Platform parameter is required')}`
       );
     }
-
-    await syncDbCredentialsToEnv();
 
     const platformType = (platform === 'TWITTER' ? 'X' : platform.toUpperCase()) as PlatformType;
     const provider = providerFactory.getProvider(platformType);

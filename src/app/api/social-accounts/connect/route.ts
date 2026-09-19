@@ -3,8 +3,6 @@ import { getAuthContext } from '@/lib/auth';
 import { hasPermission } from '@/lib/rbac';
 import { providerFactory } from '@/services/social/provider-factory';
 import { PlatformType } from '@/services/social/types';
-import { generateOAuthState } from '@/lib/oauth-state';
-import { syncDbCredentialsToEnv } from '@/services/platform-service';
 
 export async function POST(req: NextRequest) {
   const auth = await getAuthContext();
@@ -22,9 +20,6 @@ export async function POST(req: NextRequest) {
     if (!platform) {
       return NextResponse.json({ error: 'Platform identifier is required.' }, { status: 400 });
     }
-
-    // Load any database-configured credentials into environment
-    await syncDbCredentialsToEnv();
 
     const platformType = (platform === 'TWITTER' ? 'X' : platform.toUpperCase()) as PlatformType;
     const provider = providerFactory.getProvider(platformType);

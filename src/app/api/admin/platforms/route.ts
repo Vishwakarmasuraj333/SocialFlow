@@ -78,6 +78,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Platform with slug "${cleanSlug}" already exists` }, { status: 400 });
     }
 
+    if (clientId && String(clientId).includes('@')) {
+      return NextResponse.json(
+        { error: 'Invalid Client ID: Email addresses cannot be used as platform client IDs.' },
+        { status: 400 }
+      );
+    }
+
     const platform = await prisma.platform.create({
       data: {
         name: name.trim(),
@@ -95,8 +102,8 @@ export async function POST(req: NextRequest) {
         imageSupport,
         apiVersion,
         status,
-        clientId: clientId || null,
-        clientSecret: clientSecret || null,
+        clientId: clientId ? String(clientId).trim() : null,
+        clientSecret: null, // System OAuth secrets must only be configured in server environment variables
         scopes: scopes || null,
         authUrl: authUrl || null,
         tokenUrl: tokenUrl || null,
@@ -112,7 +119,8 @@ export async function POST(req: NextRequest) {
       metadata: { slug: platform.slug, name: platform.name },
     });
 
-    return NextResponse.json({ success: true, platform });
+    const { clientSecret: _omit, ...safePlatform } = platform;
+    return NextResponse.json({ success: true, platform: safePlatform });
   } catch (error: any) {
     console.error('Error creating platform:', error);
     return NextResponse.json({ error: error.message || 'Failed to create platform' }, { status: 500 });
