@@ -37,5 +37,9 @@ export function getPlatformRedirectUri(platform: PlatformType | string): string 
     return `${normalizedBase}/api/auth/x/callback`;
   }
 
+  if (p === 'LINKEDIN') {
+    return `${normalizedBase}/api/social/linkedin/callback`;
+  }
+
   return `${normalizedBase}/api/social-accounts/callback/${p.toLowerCase()}`;
 }
