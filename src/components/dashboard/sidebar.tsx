@@ -318,19 +318,23 @@ export function Sidebar({
             collapsed ? 'justify-center px-2' : 'justify-between px-3.5'
           )}
         >
-          <Link href={mode === 'admin' ? '/admin/dashboard' : '/dashboard'} className="flex items-center gap-2.5 overflow-hidden group min-w-0">
+          <Link href={mode === 'admin' ? '/admin/dashboard' : '/dashboard'} className="flex items-center gap-2.5 overflow-hidden group min-w-0 transition-transform hover:scale-[1.02]">
             {collapsed ? (
-              <SocialFlowLogo iconOnly size="sm" />
+              <SocialFlowLogo iconOnly size="sm" animated />
             ) : (
               <div className="flex items-center gap-2 min-w-0">
-                <SocialFlowLogo size="sm" />
+                <SocialFlowLogo size="sm" animated />
                 <span className={cn(
-                  "text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded-md border shrink-0",
+                  "text-[9px] uppercase font-extrabold tracking-wider px-2 py-0.5 rounded-full border shrink-0 flex items-center gap-1 shadow-xs transition-all duration-300",
                   mode === 'admin'
-                    ? "bg-rose-50 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800"
-                    : "bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800"
+                    ? "bg-gradient-to-r from-rose-500/15 via-pink-500/10 to-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-300/80 dark:border-rose-700/80 shadow-rose-500/10 group-hover:border-rose-400"
+                    : "bg-gradient-to-r from-indigo-500/15 via-purple-500/10 to-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-300/80 dark:border-indigo-700/80 shadow-indigo-500/10 group-hover:border-indigo-400"
                 )}>
-                  {mode === 'admin' ? 'ADMIN' : 'STUDIO'}
+                  <span className={cn(
+                    "w-1.5 h-1.5 rounded-full animate-pulse",
+                    mode === 'admin' ? "bg-rose-500" : "bg-indigo-500"
+                  )} />
+                  <span>{mode === 'admin' ? 'ADMIN' : 'STUDIO'}</span>
                 </span>
               </div>
             )}

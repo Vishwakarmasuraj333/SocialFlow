@@ -34,6 +34,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/components/providers';
 import { useToast } from '@/components/ui/toast';
 import { AdminAvatar } from '@/components/ui/avatar';
+import { SocialFlowLogo } from '@/components/brand/logo';
 
 interface HeaderProps {
   user: {
@@ -218,6 +219,15 @@ export function Header({
             />
           </div>
         </button>
+
+        {/* Mobile Brand Logo */}
+        <Link href="/admin/dashboard" className="md:hidden flex items-center gap-1.5 shrink-0 group">
+          <SocialFlowLogo iconOnly size="xs" animated />
+          <span className="text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded-full border bg-gradient-to-r from-rose-500/15 via-pink-500/10 to-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-300 dark:border-rose-700/60 shadow-xs flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+            ADMIN
+          </span>
+        </Link>
 
         {/* Workspace Dropdown */}
         <div className="relative" ref={wsRef}>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ExternalLink, Globe, Lock, ShieldCheck, Zap, Activity } from 'lucide-react';
+import { ExternalLink, Globe, Lock, ShieldCheck, Zap, Activity, RotateCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface WebsiteScreenshotProps {
@@ -44,10 +44,11 @@ export function WebsiteScreenshot({
   // Check if a direct local preview image or configured preview image is available
   const resolvedImg = resolveWebsitePreview(cleanDomain, targetUrl, previewImage);
 
-  // High-reliability live real-time screenshot capture services (Headless Chromium live capture)
+  // High-reliability live real-time screenshot capture services (Automattic mShots + Thum.io + Microlink)
   const liveScreenshotSources = [
-    `https://api.microlink.io/?url=${encodeURIComponent(targetUrl)}&screenshot=true&meta=false&embed=screenshot.url`,
+    `https://s0.wp.com/mshots/v1/${encodeURIComponent(targetUrl)}?w=1280`,
     `https://image.thum.io/get/width/1200/crop/800/noanimate/${targetUrl}`,
+    `https://api.microlink.io/?url=${encodeURIComponent(targetUrl)}&screenshot=true&meta=false&embed=screenshot.url`,
   ];
 
   const initialImage = resolvedImg || liveScreenshotSources[0];
@@ -71,10 +72,18 @@ export function WebsiteScreenshot({
 
       const timer = setTimeout(() => {
         setIsLoading(false);
-      }, 4000);
+      }, 3500);
       return () => clearTimeout(timer);
     }
   }, [cleanDomain, targetUrl, previewImage]);
+
+  const handleNextSource = () => {
+    const nextIndex = (sourceIndex + 1) % liveScreenshotSources.length;
+    setSourceIndex(nextIndex);
+    setActiveImage(liveScreenshotSources[nextIndex]);
+    setIsLoading(true);
+    setHasFailedAll(false);
+  };
 
   const handleImageError = () => {
     if (activeImage && (activeImage.startsWith('/images/') || activeImage.startsWith('/previews/'))) {
@@ -126,15 +135,25 @@ export function WebsiteScreenshot({
             <span className="truncate">{cleanDomain}</span>
           </div>
 
-          <a
-            href={targetUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            title={`Visit ${cleanDomain}`}
-            className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <ExternalLink className="w-3 h-3" />
-          </a>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleNextSource}
+              title="Refresh / Switch Preview Source"
+              className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            >
+              <RotateCw className={cn('w-3 h-3', isLoading && 'animate-spin text-indigo-400')} />
+            </button>
+            <a
+              href={targetUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`Visit ${cleanDomain}`}
+              className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            >
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
         </div>
       )}
 

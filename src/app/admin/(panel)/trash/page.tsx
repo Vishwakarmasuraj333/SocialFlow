@@ -155,7 +155,7 @@ export default function AdminTrashPage() {
   const handlePermanentDelete = (item: TrashedItem) => {
     setConfirmModal({
       isOpen: true,
-      title: `Permanently Purge "${item.title}"?`,
+      title: `Permanently Delete "${item.title}"?`,
       description:
         'This operation is irreversible. All related records and historical traces will be permanently erased from the database.',
       action: async () => {
@@ -172,7 +172,7 @@ export default function AdminTrashPage() {
           });
           const data = await res.json();
           if (res.ok) {
-            setMessage({ type: 'success', text: data.message || 'Permanently purged' });
+            setMessage({ type: 'success', text: data.message || 'Permanently deleted' });
             setSelectedIds((prev) => prev.filter((i) => i !== item.id));
             fetchTrash();
           } else {
@@ -197,10 +197,10 @@ export default function AdminTrashPage() {
     setConfirmModal({
       isOpen: true,
       title: isDelete
-        ? `Permanently Purge ${selectedIds.length} Item(s)?`
+        ? `Permanently Delete ${selectedIds.length} Item(s)?`
         : `Restore ${selectedIds.length} Item(s)?`,
       description: isDelete
-        ? 'You are about to irreversibly purge all selected items from the database.'
+        ? 'You are about to irreversibly delete all selected items permanently from the database.'
         : 'Selected items will be restored to their active state across their respective modules.',
       action: async () => {
         setProcessing(true);
@@ -230,7 +230,7 @@ export default function AdminTrashPage() {
 
           setMessage({
             type: 'success',
-            text: `${selectedIds.length} item(s) ${isDelete ? 'permanently purged' : 'restored successfully'}!`,
+            text: `${selectedIds.length} item(s) ${isDelete ? 'permanently deleted' : 'restored successfully'}!`,
           });
           setSelectedIds([]);
           fetchTrash();
@@ -506,7 +506,7 @@ export default function AdminTrashPage() {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-red-600 hover:bg-red-500 text-white shadow-xs transition cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              Permanently Purge
+              Delete Permanently
             </button>
             <button
               onClick={() => setSelectedIds([])}
@@ -626,11 +626,11 @@ export default function AdminTrashPage() {
                             <button
                               onClick={() => handlePermanentDelete(item)}
                               disabled={processing}
-                              title="Purge permanently"
+                              title="Delete permanently"
                               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/60 transition cursor-pointer"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
-                              Purge
+                              Delete
                             </button>
                           </div>
                         </td>
@@ -707,7 +707,7 @@ export default function AdminTrashPage() {
                         className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/60 transition cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-                        Purge
+                        Delete
                       </button>
                     </div>
                   </div>
@@ -751,7 +751,7 @@ export default function AdminTrashPage() {
                 className="px-4 py-2 text-xs font-semibold rounded-xl bg-red-600 hover:bg-red-500 text-white transition flex items-center gap-2 cursor-pointer shadow-md shadow-red-600/20"
               >
                 {processing && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                Confirm Purge
+                Confirm Delete
               </button>
             </div>
           </div>
