@@ -17,13 +17,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Platform identifier and Client ID / App Key are required.' }, { status: 400 });
     }
 
+    const trimmedClientId = String(clientId).trim();
+    if (trimmedClientId.includes('@')) {
+      return NextResponse.json(
+        { error: 'Invalid Client ID: You provided an email address instead of the official OAuth Client ID / App ID from the platform developer portal.' },
+        { status: 400 }
+      );
+    }
+
     const cleanSlug = String(platform).toLowerCase().trim();
 
     // Upsert platform credentials into Database
     const updated = await prisma.platform.upsert({
       where: { slug: cleanSlug },
       update: {
-        clientId: clientId.trim(),
+        clientId: trimmedClientId,
+        ...(clientSecret ? { clientSecret: clientSecret.trim() } : {}),
         ...(clientSecret ? { clientSecret: clientSecret.trim() } : {}),
         ...(scopes ? { scopes: scopes.trim() } : {}),
         ...(authUrl ? { authUrl: authUrl.trim() } : {}),

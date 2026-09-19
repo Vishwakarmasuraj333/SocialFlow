@@ -1,38 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { providerFactory } from '@/services/social/provider-factory';
-import { PlatformType } from '@/services/social/types';
 import { encryptSecret } from '@/lib/encryption';
 import { logAuditEvent } from '@/lib/audit';
 import { verifyOAuthState } from '@/lib/oauth-state';
 import { syncDbCredentialsToEnv } from '@/services/platform-service';
+import { getPlatformRedirectUri } from '@/services/social/redirect-uri';
 
-export async function GET(
-  req: NextRequest,
-  context: { params: Promise<{ platform: string }> }
-) {
-  const { platform } = await context.params;
+export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get('code');
   const state = searchParams.get('state');
   const error = searchParams.get('error') || searchParams.get('error_description');
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
   if (error) {
     return NextResponse.redirect(
-      `${appUrl}/admin/social/accounts?error=${encodeURIComponent(`Provider returned error: ${error}`)}`
+      `${appUrl}/admin/social/accounts?error=${encodeURIComponent(`X rejected authorization: ${error}`)}`
     );
   }
 
   if (!code || !state) {
     return NextResponse.redirect(
-      `${appUrl}/admin/social/accounts?error=${encodeURIComponent('Missing OAuth authorization code or state token')}`
+      `${appUrl}/admin/social/accounts?error=${encodeURIComponent('Missing OAuth authorization code or state token from X')}`
     );
   }
 
   try {
-    // Validate signed state token (CSRF protection)
+    // 1. Validate tamper-proof state token (CSRF check & retrieve workspaceId + codeVerifier)
     const stateData = await verifyOAuthState(state);
     if (!stateData) {
       return NextResponse.redirect(
@@ -40,44 +36,44 @@ export async function GET(
       );
     }
 
+    if (!stateData.codeVerifier) {
+      return NextResponse.redirect(
+        `${appUrl}/admin/social/accounts?error=${encodeURIComponent('PKCE code verifier is missing from session. Please restart connection.')}`
+      );
+    }
+
     await syncDbCredentialsToEnv();
 
-    const platformType = (platform === 'TWITTER' ? 'X' : platform.toUpperCase()) as PlatformType;
-    const provider = providerFactory.getProvider(platformType);
-    const { getPlatformRedirectUri } = await import('@/services/social/redirect-uri');
-    
-    // Ensure the redirectUri exactly matches what was used during authorization
-    const redirectUri = process.env.X_REDIRECT_URI && platformType === 'X'
-      ? process.env.X_REDIRECT_URI
-      : `${appUrl}/api/social-accounts/callback/${platform.toLowerCase()}`;
+    const provider = providerFactory.getProvider('X');
+    const redirectUri = getPlatformRedirectUri('X');
 
-    // Exchange authorization code for real access tokens
+    // 2. Exchange authorization code for real X access tokens using PKCE verifier
     const tokenResult = await provider.handleCallback(code, redirectUri, stateData.codeVerifier);
     const encrypted = encryptSecret(tokenResult.accessToken);
 
     const workspaceId = stateData.workspaceId;
     if (!workspaceId) {
-      throw new Error('No active workspace context found for OAuth connection');
+      throw new Error('No active workspace context found in OAuth state.');
     }
 
     const handle = tokenResult.accountHandle?.startsWith('@')
       ? tokenResult.accountHandle
-      : `@${tokenResult.accountHandle || platform.toLowerCase() + '_user'}`;
+      : `@${tokenResult.accountHandle || 'x_user'}`;
 
     const realFollowers = tokenResult.metadata?.followers ?? null;
     const realFollowing = tokenResult.metadata?.following ?? null;
 
-    const platformRef = await prisma.platform.findUnique({
-      where: { slug: platformType.toLowerCase() },
+    const platformRef = await prisma.platform.findFirst({
+      where: { slug: { in: ['x', 'twitter'] } },
     });
 
-    // Check if this platform account is already connected in this workspace
+    // 3. Upsert real connected account into Database
     const existing = await prisma.socialAccount.findUnique({
       where: {
         workspaceId_platform_platformAccountId: {
           workspaceId,
-          platform: platformType,
-          platformAccountId: tokenResult.platformAccountId,
+          platform: 'X',
+        platformAccountId: tokenResult.platformAccountId,
         },
       },
       include: { credentials: true },
@@ -86,7 +82,6 @@ export async function GET(
     let accountId: string;
 
     if (existing) {
-      // Reconnect existing account
       const updated = await prisma.socialAccount.update({
         where: { id: existing.id },
         data: {
@@ -96,11 +91,12 @@ export async function GET(
           status: 'CONNECTED',
           lastSyncedAt: new Date(),
           isSoftDeleted: false,
+          deletedAt: null,
           metadataJson: JSON.stringify({
             followers: realFollowers,
             following: realFollowing,
             verified: true,
-            category: `${provider.capabilities.displayName} Channel`,
+            network: 'X (Twitter API v2)',
           }),
         },
       });
@@ -113,7 +109,7 @@ export async function GET(
             encryptedRefreshToken: tokenResult.refreshToken ? encryptSecret(tokenResult.refreshToken).encrypted : null,
             iv: encrypted.iv,
             authTag: encrypted.authTag,
-            scopes: tokenResult.scopes?.join(',') || 'all',
+            scopes: tokenResult.scopes?.join(',') || 'tweet.read,tweet.write,users.read,offline.access',
             tokenExpiresAt: tokenResult.expiresInSeconds
               ? new Date(Date.now() + tokenResult.expiresInSeconds * 1000)
               : new Date(Date.now() + 60 * 24 * 3600 * 1000),
@@ -123,13 +119,12 @@ export async function GET(
 
       accountId = updated.id;
     } else {
-      // Create new connected account
       const created = await prisma.socialAccount.create({
         data: {
           workspaceId,
           platformId: platformRef?.id || null,
-          platform: platformType,
-          accountName: tokenResult.accountName || `${provider.capabilities.displayName} Channel`,
+          platform: 'X',
+          accountName: tokenResult.accountName || 'X Profile',
           accountHandle: handle,
           avatarUrl: tokenResult.avatarUrl,
           platformAccountId: tokenResult.platformAccountId,
@@ -139,7 +134,7 @@ export async function GET(
             followers: realFollowers,
             following: realFollowing,
             verified: true,
-            category: `${provider.capabilities.displayName} Official Channel`,
+            network: 'X (Twitter API v2)',
           }),
           credentials: {
             create: {
@@ -147,7 +142,7 @@ export async function GET(
               encryptedRefreshToken: tokenResult.refreshToken ? encryptSecret(tokenResult.refreshToken).encrypted : null,
               iv: encrypted.iv,
               authTag: encrypted.authTag,
-              scopes: tokenResult.scopes?.join(',') || 'all',
+              scopes: tokenResult.scopes?.join(',') || 'tweet.read,tweet.write,users.read,offline.access',
               tokenExpiresAt: tokenResult.expiresInSeconds
                 ? new Date(Date.now() + tokenResult.expiresInSeconds * 1000)
                 : new Date(Date.now() + 60 * 24 * 3600 * 1000),
@@ -159,21 +154,21 @@ export async function GET(
       accountId = created.id;
     }
 
-    // Audit log
+    // 4. Audit log event
     await logAuditEvent({
       workspaceId,
       userId: stateData.userId,
       action: 'ACCOUNT_CONNECTED',
       entityType: 'SocialAccount',
       entityId: accountId,
-      metadata: { platform: platformType, handle, oauthFlow: 'OAUTH2_STATE_VERIFIED' },
-    });
+      metadata: { platform: 'X', handle, oauthFlow: 'OAUTH2_PKCE_S256' },
+    }).catch(() => {});
 
     return NextResponse.redirect(
-      `${appUrl}/admin/social/accounts?connected=${encodeURIComponent(tokenResult.accountName || provider.capabilities.displayName)}&success=true`
+      `${appUrl}/admin/social/accounts?connected=${encodeURIComponent(handle)}&success=true`
     );
   } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : 'OAuth authorization failed';
+    const errorMsg = err instanceof Error ? err.message : 'X OAuth authentication failed';
     return NextResponse.redirect(
       `${appUrl}/admin/social/accounts?error=${encodeURIComponent(errorMsg)}`
     );

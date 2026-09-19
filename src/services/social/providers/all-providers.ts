@@ -148,6 +148,20 @@ export class FacebookProvider extends SocialProvider {
   }
 }
 
+// Helper to validate and retrieve X OAuth credentials
+function getXOAuthCredentials(): { clientId: string; clientSecret: string } {
+  const clientId = (process.env.X_CLIENT_ID || process.env.TWITTER_CLIENT_ID || '').trim();
+  const clientSecret = (process.env.X_CLIENT_SECRET || process.env.TWITTER_CLIENT_SECRET || '').trim();
+
+  if (clientId.includes('@')) {
+    throw new Error(
+      'Invalid X_CLIENT_ID: Your email address was passed as client_id. Set X_CLIENT_ID to the official OAuth 2.0 Client ID from the X Developer Portal.'
+    );
+  }
+
+  return { clientId, clientSecret };
+}
+
 // ==========================================
 // 2. X / TWITTER PROVIDER (X API v2 with PKCE)
 // ==========================================
@@ -184,38 +198,71 @@ export class XProvider extends SocialProvider {
     configDocsUrl: 'https://developer.x.com/en/docs/x-api',
   };
 
-  getAuthorizationUrl(state: string, redirectUri: string, codeChallenge = 'plain_challenge_verification'): string {
-    const clientId = process.env.X_CLIENT_ID || process.env.TWITTER_CLIENT_ID || '';
-    const scopes = encodeURIComponent('tweet.read tweet.write users.read offline.access');
-    return `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes}&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=plain`;
+  getAuthorizationUrl(state: string, redirectUri: string, codeChallenge?: string): string {
+    const { clientId } = getXOAuthCredentials();
+    if (!clientId) {
+      throw new Error('X API Client ID is not configured in server environment (X_CLIENT_ID).');
+    }
+
+    // Default challenge if not supplied by caller (SHA-256 fallback)
+    const challenge = codeChallenge || 's256_pkce_challenge_required';
+    const scopes = 'tweet.read tweet.write users.read offline.access';
+
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      scope: scopes,
+      state,
+      code_challenge: challenge,
+      code_challenge_method: 'S256',
+    });
+
+    return `https://twitter.com/i/oauth2/authorize?${params.toString()}`;
   }
 
-  async handleCallback(code: string, redirectUri: string, codeVerifier = 'plain_challenge_verification'): Promise<TokenExchangeResult> {
-    const clientId = process.env.X_CLIENT_ID || process.env.TWITTER_CLIENT_ID || '';
-    const clientSecret = process.env.X_CLIENT_SECRET || process.env.TWITTER_CLIENT_SECRET || '';
-    if (!clientId || !clientSecret) throw new Error('X API Client credentials are not configured in environment.');
+  async handleCallback(code: string, redirectUri: string, codeVerifier?: string): Promise<TokenExchangeResult> {
+    const { clientId, clientSecret } = getXOAuthCredentials();
+    if (!clientId) {
+      throw new Error('X API Client ID is not configured in environment (X_CLIENT_ID).');
+    }
+    if (!codeVerifier) {
+      throw new Error('PKCE verification failed: Missing code_verifier for X OAuth 2.0.');
+    }
 
-    const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    };
+
+    if (clientSecret) {
+      headers['Authorization'] = `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`;
+    }
+
+    const bodyParams = new URLSearchParams({
+      code,
+      grant_type: 'authorization_code',
+      redirect_uri: redirectUri,
+      code_verifier: codeVerifier,
+      client_id: clientId,
+    });
+
     const res = await fetch('https://api.twitter.com/2/oauth2/token', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: `Basic ${basicAuth}`,
-      },
-      body: new URLSearchParams({
-        code,
-        grant_type: 'authorization_code',
-        redirect_uri: redirectUri,
-        code_verifier: codeVerifier,
-      }),
+      headers,
+      body: bodyParams,
     });
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.error_description || err.error || 'Failed to exchange X authorization code');
+      const msg = err.error_description || err.error || err.detail || err.title || 'Failed to exchange X authorization code';
+      throw new Error(`X OAuth Error: ${msg}`);
     }
 
     const tokenData = await res.json();
+    if (!tokenData.access_token) {
+      throw new Error('X API returned a successful response but no access_token was found.');
+    }
+
     const profile = await this.getProfile(tokenData.access_token);
 
     return {
@@ -231,24 +278,96 @@ export class XProvider extends SocialProvider {
   }
 
   async getProfile(accessToken: string): Promise<AccountProfileResult> {
-    try {
-      const res = await fetch('https://api.twitter.com/2/users/me?user.fields=profile_image_url,public_metrics', {
+    const res = await fetch(
+      'https://api.twitter.com/2/users/me?user.fields=profile_image_url,public_metrics,verified,description',
+      {
         headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      if (res.ok) {
-        const d = await res.json();
-        const user = d.data;
-        return {
-          platformAccountId: user.id,
-          accountName: user.name,
-          accountHandle: `@${user.username}`,
-          avatarUrl: user.profile_image_url,
-          followers: user.public_metrics?.followers_count ?? null,
-          following: user.public_metrics?.following_count ?? null,
-        };
       }
-    } catch {}
-    return { platformAccountId: 'unknown', accountName: 'X Account', accountHandle: '@x_account', followers: null, following: null };
+    );
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const errorDetail = err.detail || err.title || `HTTP ${res.status}`;
+      throw new Error(`Failed to retrieve authentic X user profile: ${errorDetail}`);
+    }
+
+    const d = await res.json();
+    const user = d.data;
+
+    if (!user || !user.id) {
+      throw new Error('X API returned empty profile data for the authenticated user.');
+    }
+
+    return {
+      platformAccountId: user.id,
+      accountName: user.name || user.username,
+      accountHandle: `@${user.username}`,
+      avatarUrl: user.profile_image_url || undefined,
+      followers: user.public_metrics?.followers_count ?? null,
+      following: user.public_metrics?.following_count ?? null,
+    };
+  }
+
+  async refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; refreshToken?: string; expiresInSeconds?: number }> {
+    const { clientId, clientSecret } = getXOAuthCredentials();
+    if (!clientId) throw new Error('X API Client ID not configured.');
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    };
+    if (clientSecret) {
+      headers['Authorization'] = `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`;
+    }
+
+    const res = await fetch('https://api.twitter.com/2/oauth2/token', {
+      method: 'POST',
+      headers,
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: clientId,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error_description || err.error || 'Failed to refresh X access token');
+    }
+
+    const d = await res.json();
+    return {
+      accessToken: d.access_token,
+      refreshToken: d.refresh_token,
+      expiresInSeconds: d.expires_in,
+    };
+  }
+
+  async revokeToken(token: string): Promise<boolean> {
+    const { clientId, clientSecret } = getXOAuthCredentials();
+    if (!clientId || !token) return false;
+
+    try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      };
+      if (clientSecret) {
+        headers['Authorization'] = `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`;
+      }
+
+      const res = await fetch('https://api.twitter.com/2/oauth2/revoke', {
+        method: 'POST',
+        headers,
+        body: new URLSearchParams({
+          token,
+          token_type_hint: 'access_token',
+          client_id: clientId,
+        }),
+      });
+
+      return res.ok;
+    } catch {
+      return false;
+    }
   }
 
   async publishPost(accessToken: string, payload: PublishPostPayload): Promise<PublishResult> {
@@ -332,15 +451,20 @@ export class LinkedInProvider extends SocialProvider {
   };
 
   getAuthorizationUrl(state: string, redirectUri: string): string {
-    const clientId = process.env.LINKEDIN_CLIENT_ID || '';
+    const clientId = (process.env.LINKEDIN_CLIENT_ID || '').trim();
+    if (!clientId || clientId.includes('@')) {
+      throw new Error('Invalid or missing LINKEDIN_CLIENT_ID: Set LINKEDIN_CLIENT_ID to your official LinkedIn Client ID from the LinkedIn Developer Portal (never your email).');
+    }
     const scopes = encodeURIComponent('openid profile email w_member_social');
     return `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=${scopes}`;
   }
 
   async handleCallback(code: string, redirectUri: string): Promise<TokenExchangeResult> {
-    const clientId = process.env.LINKEDIN_CLIENT_ID || '';
-    const clientSecret = process.env.LINKEDIN_CLIENT_SECRET || '';
-    if (!clientId || !clientSecret) throw new Error('LinkedIn Client credentials not configured in environment.');
+    const clientId = (process.env.LINKEDIN_CLIENT_ID || '').trim();
+    const clientSecret = (process.env.LINKEDIN_CLIENT_SECRET || '').trim();
+    if (!clientId || clientId.includes('@') || !clientSecret || clientSecret.includes('@')) {
+      throw new Error('LinkedIn credentials invalid or contaminated with email in environment.');
+    }
 
     const res = await fetch('https://www.linkedin.com/oauth/v2/accessToken', {
       method: 'POST',

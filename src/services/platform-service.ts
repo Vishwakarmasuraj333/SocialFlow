@@ -67,6 +67,17 @@ export async function ensureDefaultPlatforms() {
  */
 export async function syncDbCredentialsToEnv() {
   try {
+    // 1. One-time DB cleanup: remove invalid email values saved in clientId
+    await prisma.platform.updateMany({
+      where: {
+        clientId: { contains: '@' },
+      },
+      data: {
+        clientId: null,
+        clientSecret: null,
+      },
+    }).catch(() => {});
+
     const configuredInDb = await prisma.platform.findMany({
       where: {
         isSoftDeleted: false,
@@ -80,86 +91,86 @@ export async function syncDbCredentialsToEnv() {
     });
 
     for (const p of configuredInDb) {
-      if (!p.clientId) continue;
+      if (!p.clientId || p.clientId.includes('@')) continue;
       const slug = p.slug.toLowerCase();
-      const secret = p.clientSecret || '';
+      const secret = p.clientSecret && !p.clientSecret.includes('@') ? p.clientSecret : '';
 
       switch (slug) {
         case 'facebook':
         case 'instagram':
         case 'threads':
-          process.env.META_APP_ID = p.clientId;
-          if (secret) process.env.META_APP_SECRET = secret;
+          if (!process.env.META_APP_ID) process.env.META_APP_ID = p.clientId;
+          if (secret && !process.env.META_APP_SECRET) process.env.META_APP_SECRET = secret;
           break;
         case 'linkedin':
-          process.env.LINKEDIN_CLIENT_ID = p.clientId;
-          if (secret) process.env.LINKEDIN_CLIENT_SECRET = secret;
+          if (!process.env.LINKEDIN_CLIENT_ID) process.env.LINKEDIN_CLIENT_ID = p.clientId;
+          if (secret && !process.env.LINKEDIN_CLIENT_SECRET) process.env.LINKEDIN_CLIENT_SECRET = secret;
           break;
         case 'x':
         case 'twitter':
-          process.env.X_CLIENT_ID = p.clientId;
-          if (secret) process.env.X_CLIENT_SECRET = secret;
-          process.env.TWITTER_CLIENT_ID = p.clientId;
-          if (secret) process.env.TWITTER_CLIENT_SECRET = secret;
+          if (!process.env.X_CLIENT_ID) process.env.X_CLIENT_ID = p.clientId;
+          if (secret && !process.env.X_CLIENT_SECRET) process.env.X_CLIENT_SECRET = secret;
+          if (!process.env.TWITTER_CLIENT_ID) process.env.TWITTER_CLIENT_ID = p.clientId;
+          if (secret && !process.env.TWITTER_CLIENT_SECRET) process.env.TWITTER_CLIENT_SECRET = secret;
           break;
         case 'youtube':
-          process.env.YOUTUBE_CLIENT_ID = p.clientId;
-          if (secret) process.env.YOUTUBE_CLIENT_SECRET = secret;
-          process.env.GOOGLE_CLIENT_ID = p.clientId;
-          if (secret) process.env.GOOGLE_CLIENT_SECRET = secret;
+          if (!process.env.YOUTUBE_CLIENT_ID) process.env.YOUTUBE_CLIENT_ID = p.clientId;
+          if (secret && !process.env.YOUTUBE_CLIENT_SECRET) process.env.YOUTUBE_CLIENT_SECRET = secret;
+          if (!process.env.GOOGLE_CLIENT_ID) process.env.GOOGLE_CLIENT_ID = p.clientId;
+          if (secret && !process.env.GOOGLE_CLIENT_SECRET) process.env.GOOGLE_CLIENT_SECRET = secret;
           break;
         case 'tiktok':
-          process.env.TIKTOK_CLIENT_KEY = p.clientId;
-          if (secret) process.env.TIKTOK_CLIENT_SECRET = secret;
+          if (!process.env.TIKTOK_CLIENT_KEY) process.env.TIKTOK_CLIENT_KEY = p.clientId;
+          if (secret && !process.env.TIKTOK_CLIENT_SECRET) process.env.TIKTOK_CLIENT_SECRET = secret;
           break;
         case 'pinterest':
-          process.env.PINTEREST_APP_ID = p.clientId;
-          if (secret) process.env.PINTEREST_APP_SECRET = secret;
+          if (!process.env.PINTEREST_APP_ID) process.env.PINTEREST_APP_ID = p.clientId;
+          if (secret && !process.env.PINTEREST_APP_SECRET) process.env.PINTEREST_APP_SECRET = secret;
           break;
         case 'snapchat':
-          process.env.SNAPCHAT_CLIENT_ID = p.clientId;
-          if (secret) process.env.SNAPCHAT_CLIENT_SECRET = secret;
+          if (!process.env.SNAPCHAT_CLIENT_ID) process.env.SNAPCHAT_CLIENT_ID = p.clientId;
+          if (secret && !process.env.SNAPCHAT_CLIENT_SECRET) process.env.SNAPCHAT_CLIENT_SECRET = secret;
           break;
         case 'reddit':
-          process.env.REDDIT_CLIENT_ID = p.clientId;
-          if (secret) process.env.REDDIT_CLIENT_SECRET = secret;
+          if (!process.env.REDDIT_CLIENT_ID) process.env.REDDIT_CLIENT_ID = p.clientId;
+          if (secret && !process.env.REDDIT_CLIENT_SECRET) process.env.REDDIT_CLIENT_SECRET = secret;
           break;
         case 'whatsapp':
-          process.env.META_APP_ID = p.clientId;
-          if (secret) process.env.WHATSAPP_PHONE_NUMBER_ID = secret;
+          if (!process.env.META_APP_ID) process.env.META_APP_ID = p.clientId;
+          if (secret && !process.env.WHATSAPP_PHONE_NUMBER_ID) process.env.WHATSAPP_PHONE_NUMBER_ID = secret;
           break;
         case 'telegram':
-          process.env.TELEGRAM_BOT_TOKEN = p.clientId;
+          if (!process.env.TELEGRAM_BOT_TOKEN) process.env.TELEGRAM_BOT_TOKEN = p.clientId;
           break;
         case 'discord':
-          process.env.DISCORD_CLIENT_ID = p.clientId;
-          if (secret) process.env.DISCORD_BOT_TOKEN = secret;
+          if (!process.env.DISCORD_CLIENT_ID) process.env.DISCORD_CLIENT_ID = p.clientId;
+          if (secret && !process.env.DISCORD_BOT_TOKEN) process.env.DISCORD_BOT_TOKEN = secret;
           break;
         case 'bluesky':
-          process.env.BLUESKY_IDENTIFIER = p.clientId;
-          if (secret) process.env.BLUESKY_APP_PASSWORD = secret;
+          if (!process.env.BLUESKY_IDENTIFIER) process.env.BLUESKY_IDENTIFIER = p.clientId;
+          if (secret && !process.env.BLUESKY_APP_PASSWORD) process.env.BLUESKY_APP_PASSWORD = secret;
           break;
         case 'mastodon':
-          process.env.MASTODON_ACCESS_TOKEN = p.clientId;
+          if (!process.env.MASTODON_ACCESS_TOKEN) process.env.MASTODON_ACCESS_TOKEN = p.clientId;
           break;
         case 'tumblr':
-          process.env.TUMBLR_CONSUMER_KEY = p.clientId;
-          if (secret) process.env.TUMBLR_CONSUMER_SECRET = secret;
+          if (!process.env.TUMBLR_CONSUMER_KEY) process.env.TUMBLR_CONSUMER_KEY = p.clientId;
+          if (secret && !process.env.TUMBLR_CONSUMER_SECRET) process.env.TUMBLR_CONSUMER_SECRET = secret;
           break;
         case 'medium':
-          process.env.MEDIUM_CLIENT_ID = p.clientId;
-          if (secret) process.env.MEDIUM_CLIENT_SECRET = secret;
+          if (!process.env.MEDIUM_CLIENT_ID) process.env.MEDIUM_CLIENT_ID = p.clientId;
+          if (secret && !process.env.MEDIUM_CLIENT_SECRET) process.env.MEDIUM_CLIENT_SECRET = secret;
           break;
         case 'quora':
-          process.env.QUORA_ACCESS_TOKEN = p.clientId;
+          if (!process.env.QUORA_ACCESS_TOKEN) process.env.QUORA_ACCESS_TOKEN = p.clientId;
           break;
         case 'wordpress':
-          process.env.WORDPRESS_SITE_URL = p.clientId;
-          if (secret) process.env.WORDPRESS_APP_PASSWORD = secret;
+          if (!process.env.WORDPRESS_SITE_URL) process.env.WORDPRESS_SITE_URL = p.clientId;
+          if (secret && !process.env.WORDPRESS_APP_PASSWORD) process.env.WORDPRESS_APP_PASSWORD = secret;
           break;
         case 'vimeo':
-          process.env.VIMEO_CLIENT_ID = p.clientId;
-          if (secret) process.env.VIMEO_CLIENT_SECRET = secret;
+          if (!process.env.VIMEO_CLIENT_ID) process.env.VIMEO_CLIENT_ID = p.clientId;
+          if (secret && !process.env.VIMEO_CLIENT_SECRET) process.env.VIMEO_CLIENT_SECRET = secret;
           break;
       }
     }

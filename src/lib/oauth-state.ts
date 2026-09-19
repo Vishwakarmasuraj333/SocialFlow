@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose';
+import crypto from 'crypto';
 
 const OAUTH_SECRET = new TextEncoder().encode(
   process.env.AUTH_SECRET || 'socialflow_oauth_state_secret_key_32_chars_2026'
@@ -9,7 +10,22 @@ export interface OAuthStatePayload {
   userId: string;
   platform: string;
   codeVerifier?: string;
+  reconnectAccountId?: string;
   timestamp: number;
+}
+
+/**
+ * Generates a cryptographically secure PKCE code verifier (43 characters URL-safe base64url)
+ */
+export function generatePKCEVerifier(): string {
+  return crypto.randomBytes(32).toString('base64url');
+}
+
+/**
+ * Computes the S256 code challenge for a given code verifier
+ */
+export function generatePKCEChallenge(verifier: string): string {
+  return crypto.createHash('sha256').update(verifier).digest('base64url');
 }
 
 /**

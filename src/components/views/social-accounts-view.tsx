@@ -886,10 +886,13 @@ export default function SocialAccountsView() {
   // Copy official OAuth Callback URL to clipboard
   const handleCopyCallback = (slug: string) => {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://socialflow-zeta-one.vercel.app';
-    const callbackUrl = `${origin}/api/social-accounts/callback/${slug.toLowerCase()}`;
+    const clean = slug.toLowerCase();
+    const callbackUrl = clean === 'x' || clean === 'twitter'
+      ? `${origin}/api/auth/x/callback`
+      : `${origin}/api/social-accounts/callback/${clean}`;
     navigator.clipboard.writeText(callbackUrl);
     setCopiedCallback(true);
-    showToast(`Copied OAuth Callback URL for ${slug.toUpperCase()}!`, 'success');
+    showToast(`Copied OAuth Callback URL for ${slug.toUpperCase()} (${callbackUrl})`, 'success');
     setTimeout(() => setCopiedCallback(false), 2500);
   };
 
@@ -898,6 +901,11 @@ export default function SocialAccountsView() {
     if (e) e.preventDefault();
     if (!customClientId.trim()) {
       showToast(`Please enter the ${selectedPlatformSlug.toUpperCase()} Client ID / App Key`, 'warning');
+      return;
+    }
+
+    if (customClientId.trim().includes('@')) {
+      showToast('Client ID cannot be an email address! Enter the OAuth 2.0 Client ID from the X Developer Portal.', 'error');
       return;
     }
 

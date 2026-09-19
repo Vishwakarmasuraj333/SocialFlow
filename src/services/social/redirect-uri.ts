@@ -32,5 +32,10 @@ export function getPlatformRedirectUri(platform: PlatformType | string): string 
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
   const normalizedBase = appBaseUrl.replace(/\/+$/, '');
+
+  if (p === 'X') {
+    return `${normalizedBase}/api/auth/x/callback`;
+  }
+
   return `${normalizedBase}/api/social-accounts/callback/${p.toLowerCase()}`;
 }

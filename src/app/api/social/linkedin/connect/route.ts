@@ -12,12 +12,27 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(loginUrl.toString());
     }
 
-    const clientId = process.env.LINKEDIN_CLIENT_ID;
+    const { syncDbCredentialsToEnv } = await import('@/services/platform-service');
+    await syncDbCredentialsToEnv();
+
+    let clientId = (process.env.LINKEDIN_CLIENT_ID || '').trim();
+    if (clientId.includes('@')) {
+      clientId = '';
+    }
+
+    if (!clientId) {
+      const prisma = (await import('@/lib/db')).default;
+      const plat = await prisma.platform.findUnique({ where: { slug: 'linkedin' } });
+      if (plat?.clientId && !plat.clientId.includes('@')) {
+        clientId = plat.clientId.trim();
+      }
+    }
+
     if (!clientId) {
       return NextResponse.json(
         {
           error: 'CONFIG_ERROR',
-          message: 'LINKEDIN_CLIENT_ID is not configured in server environment variables.',
+          message: 'LINKEDIN_CLIENT_ID is not configured in server environment variables or database.',
         },
         { status: 400 }
       );

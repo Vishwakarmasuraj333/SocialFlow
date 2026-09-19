@@ -44,17 +44,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const { generateOAuthState, generatePKCEVerifier, generatePKCEChallenge } = await import('@/lib/oauth-state');
     const { getPlatformRedirectUri } = await import('@/services/social/redirect-uri');
     const redirectUri = getPlatformRedirectUri(platformType);
+
+    // Cryptographically secure PKCE verifier & challenge (strictly required for X API v2)
+    let codeVerifier: string | undefined;
+    let codeChallenge: string | undefined;
+
+    if (platformType === 'X') {
+      codeVerifier = generatePKCEVerifier();
+      codeChallenge = generatePKCEChallenge(codeVerifier);
+    }
 
     // Cryptographically signed state token (prevents CSRF and tampering)
     const state = await generateOAuthState({
       workspaceId: auth.workspace.id,
       userId: auth.user.id,
       platform: platformType,
+      codeVerifier,
     });
 
-    const authUrl = provider.getAuthorizationUrl(state, redirectUri);
+    const authUrl = provider.getAuthorizationUrl(state, redirectUri, codeChallenge);
 
     return NextResponse.json({
       success: true,

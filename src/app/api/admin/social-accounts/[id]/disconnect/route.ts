@@ -22,10 +22,32 @@ export async function POST(
       return NextResponse.json({ error: 'Social account ID is required' }, { status: 400 });
     }
 
-    const account = await db.socialAccount.findUnique({ where: { id } });
+    const account = await prisma.socialAccount.findUnique({
+      where: { id },
+      include: { credentials: true },
+    });
 
     if (!account) {
       return NextResponse.json({ error: 'Social account not found' }, { status: 404 });
+    }
+
+    // Revoke token on provider if supported (e.g. X / Twitter)
+    if (account.credentials?.encryptedAccessToken && (account.platform === 'X' || account.platform === 'TWITTER')) {
+      try {
+        const { decryptSecret } = await import('@/lib/encryption');
+        const { providerFactory } = await import('@/services/social/provider-factory');
+        const plainToken = decryptSecret(
+          account.credentials.encryptedAccessToken,
+          account.credentials.iv,
+          account.credentials.authTag
+        );
+        const xProvider = providerFactory.getProvider('X') as any;
+        if (typeof xProvider.revokeToken === 'function') {
+          await xProvider.revokeToken(plainToken);
+        }
+      } catch (revokeErr) {
+        console.warn('Non-blocking token revocation error on disconnect:', revokeErr);
+      }
     }
 
     if (account.status === 'DISCONNECTED') {
@@ -39,7 +61,7 @@ export async function POST(
       });
     }
 
-    const updated = await db.socialAccount.update({
+    const updated = await prisma.socialAccount.update({
       where: { id },
       data: {
         status: 'DISCONNECTED',

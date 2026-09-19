@@ -82,17 +82,21 @@ class ProviderFactory {
     const p = (platform === 'TWITTER' ? 'X' : platform.toUpperCase()) as PlatformType;
     switch (p) {
       case 'LINKEDIN':
-        return Boolean(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET);
+        return Boolean(
+          process.env.LINKEDIN_CLIENT_ID &&
+          !process.env.LINKEDIN_CLIENT_ID.includes('@') &&
+          process.env.LINKEDIN_CLIENT_SECRET
+        );
       case 'FACEBOOK':
       case 'INSTAGRAM':
       case 'THREADS':
         return Boolean(process.env.META_APP_ID && process.env.META_APP_SECRET);
       case 'X':
-      case 'TWITTER':
-        return Boolean(
-          (process.env.X_CLIENT_ID && process.env.X_CLIENT_SECRET) ||
-          (process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET)
-        );
+      case 'TWITTER': {
+        const xId = process.env.X_CLIENT_ID || process.env.TWITTER_CLIENT_ID;
+        const xSec = process.env.X_CLIENT_SECRET || process.env.TWITTER_CLIENT_SECRET;
+        return Boolean(xId && !xId.includes('@') && xSec);
+      }
       case 'TIKTOK':
         return Boolean(process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET);
       case 'YOUTUBE':

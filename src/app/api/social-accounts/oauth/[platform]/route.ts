@@ -48,13 +48,23 @@ export async function GET(
 
     const redirectUri = getPlatformRedirectUri(platformType);
 
+    const { generatePKCEVerifier, generatePKCEChallenge } = await import('@/lib/oauth-state');
+    let codeVerifier: string | undefined;
+    let codeChallenge: string | undefined;
+
+    if (platformType === 'X') {
+      codeVerifier = generatePKCEVerifier();
+      codeChallenge = generatePKCEChallenge(codeVerifier);
+    }
+
     const state = await generateOAuthState({
       workspaceId: auth.workspace.id,
       userId: auth.user.id,
       platform: platformType,
+      codeVerifier,
     });
 
-    const authUrl = provider.getAuthorizationUrl(state, redirectUri);
+    const authUrl = provider.getAuthorizationUrl(state, redirectUri, codeChallenge);
     return NextResponse.redirect(authUrl);
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'OAuth authorization failed';

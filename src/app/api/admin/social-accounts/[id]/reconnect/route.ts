@@ -25,54 +25,96 @@ export async function POST(
       return NextResponse.json({ error: 'Social account not found' }, { status: 404 });
     }
 
-    const platformType = account.platform.toUpperCase() as PlatformType;
+    const platformType = (account.platform === 'TWITTER' ? 'X' : account.platform.toUpperCase()) as PlatformType;
     const isConfigured = providerFactory.isPlatformConfigured(platformType);
 
     if (!isConfigured) {
-      // If OAuth credentials are not explicitly registered in .env, perform instant session renewal
-      const updated = await prisma.socialAccount.update({
-        where: { id },
-        data: {
-          status: 'CONNECTED',
-          lastSyncedAt: new Date(),
-        },
-      });
-
-      try {
-        await logAuditEvent({
-          workspaceId: account.workspaceId,
-          userId: auth.user.id,
-          action: 'ACCOUNT_RECONNECTED',
-          entityType: 'SocialAccount',
-          entityId: account.id,
-          metadata: { platform: account.platform, mode: 'SESSION_RENEWAL' },
-        });
-      } catch {
-        // Non-blocking audit log
-      }
-
       return NextResponse.json({
-        success: true,
-        reconnected: true,
-        message: `${account.platform} account (${account.accountHandle}) reconnected successfully.`,
-        account: updated,
-      });
+        error: `${platformType} integration credentials are not configured in the server environment.`,
+      }, { status: 400 });
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const redirectUri = `${appUrl}/api/social-accounts/callback/${platformType.toLowerCase()}`;
-    const provider = providerFactory.getProvider(platformType);
+    const provider = providerFactory.getProvider(platformType) as any;
 
-    const state = Buffer.from(
-      JSON.stringify({
-        workspaceId: account.workspaceId,
-        userId: auth.user.id,
-        reconnectAccountId: account.id,
-        nonce: Date.now(),
-      })
-    ).toString('base64');
+    // 1. Attempt silent token refresh if a refresh token is stored
+    if (account.credentials?.encryptedRefreshToken && typeof provider.refreshAccessToken === 'function') {
+      try {
+        const { decryptSecret, encryptSecret } = await import('@/lib/encryption');
+        const plainRefreshToken = decryptSecret(
+          account.credentials.encryptedRefreshToken,
+          account.credentials.iv,
+          account.credentials.authTag
+        );
 
-    const authUrl = provider.getAuthorizationUrl(state, redirectUri);
+        const refreshResult = await provider.refreshAccessToken(plainRefreshToken);
+        if (refreshResult?.accessToken) {
+          const encAccess = encryptSecret(refreshResult.accessToken);
+          const encRefresh = refreshResult.refreshToken ? encryptSecret(refreshResult.refreshToken) : null;
+
+          await prisma.oAuthCredential.update({
+            where: { id: account.credentials.id },
+            data: {
+              encryptedAccessToken: encAccess.encrypted,
+              ...(encRefresh ? { encryptedRefreshToken: encRefresh.encrypted } : {}),
+              iv: encAccess.iv,
+              authTag: encAccess.authTag,
+              tokenExpiresAt: refreshResult.expiresInSeconds
+                ? new Date(Date.now() + refreshResult.expiresInSeconds * 1000)
+                : new Date(Date.now() + 60 * 24 * 3600 * 1000),
+            },
+          });
+
+          const updatedAccount = await prisma.socialAccount.update({
+            where: { id: account.id },
+            data: {
+              status: 'CONNECTED',
+              lastSyncedAt: new Date(),
+            },
+          });
+
+          await logAuditEvent({
+            workspaceId: account.workspaceId,
+            userId: auth.user.id,
+            action: 'ACCOUNT_RECONNECTED',
+            entityType: 'SocialAccount',
+            entityId: account.id,
+            metadata: { platform: account.platform, mode: 'TOKEN_REFRESH_SUCCESS' },
+          }).catch(() => {});
+
+          return NextResponse.json({
+            success: true,
+            reconnected: true,
+            message: `${account.platform} access token was securely refreshed. No re-authorization needed!`,
+            account: updatedAccount,
+          });
+        }
+      } catch (refreshErr) {
+        console.warn('Silent token refresh failed, falling back to full OAuth flow:', refreshErr);
+      }
+    }
+
+    // 2. Fallback: Initiate full OAuth flow with cryptographically signed state & PKCE
+    const { generateOAuthState, generatePKCEVerifier, generatePKCEChallenge } = await import('@/lib/oauth-state');
+    const { getPlatformRedirectUri } = await import('@/services/social/redirect-uri');
+    const redirectUri = getPlatformRedirectUri(platformType);
+
+    let codeVerifier: string | undefined;
+    let codeChallenge: string | undefined;
+
+    if (platformType === 'X') {
+      codeVerifier = generatePKCEVerifier();
+      codeChallenge = generatePKCEChallenge(codeVerifier);
+    }
+
+    const state = await generateOAuthState({
+      workspaceId: account.workspaceId,
+      userId: auth.user.id,
+      platform: platformType,
+      reconnectAccountId: account.id,
+      codeVerifier,
+    });
+
+    const authUrl = provider.getAuthorizationUrl(state, redirectUri, codeChallenge);
 
     await logAuditEvent({
       workspaceId: account.workspaceId,
@@ -81,7 +123,7 @@ export async function POST(
       entityType: 'SocialAccount',
       entityId: account.id,
       metadata: { platform: account.platform },
-    });
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,
